@@ -1,21 +1,24 @@
-// src/components/Layout.jsx
 import Sidebar from "./Sidebar";
 import Topbar from "./Topbar";
 
 export default function Layout({ children }) {
   return (
-    <div className="flex min-h-screen bg-gray-100 p-4 gap-2">
+    <div className="flex bg-gray-100 p-4 gap-2 h-screen">
       {/* Sidebar */}
-      <div className="w-64">
+      <nav className="w-64 overflow-y-auto h-full">
         <Sidebar />
-      </div>
+      </nav>
 
       {/* Main area */}
-      <div className="flex-1 flex flex-col gap-2">
-        <Topbar /> {/* Topbar sudah dibagi dua section */}
-        {/* Konten utama */}
-        <div className="flex-1 bg-white rounded-none shadow p-6">{children}</div>
-      </div>
+      <main className="flex-1 flex flex-col gap-2 overflow-hidden h-full">
+        <header>
+          <Topbar />
+        </header>
+        {/* Konten utama bisa scroll */}
+        <section className="flex-1 bg-white rounded-none shadow p-6 overflow-y-auto">
+          {children}
+        </section>
+      </main>
     </div>
   );
 }

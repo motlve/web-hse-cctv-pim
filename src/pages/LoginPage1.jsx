@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom"; // kalau pakai react-router
 import Logo from "../assets/images/logo.png";
 import bgImage from "../assets/images/cctv-illustration.png";
 
@@ -8,43 +8,41 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
+  const navigate = useNavigate(); // untuk redirect
 
-  const dummyUsers = [
-    {
-      username: "yudhapranata",
-      password: "managerhse001",
-      fullname: "Yudha Pranata",
-      role: "Manager HSE",
-    },
-    {
-      username: "rizkyaditiyo",
-      password: "petugascctv001",
-      fullname: "Rizky Aditiyo",
-      role: "Petugas CCTV",
-    },
-  ];
+  const handleLogin = async (e) => {
+  e.preventDefault();
+  setError("");
+  setLoading(true);
 
-  const handleLogin = (e) => {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
+  try {
+    const response = await fetch("http://localhost:3000/api/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, password }),
+    });
 
-    const foundUser = dummyUsers.find(
-      (user) => user.username === username && user.password === password
-    );
+    const data = await response.json();
 
-    setTimeout(() => {
-      if (foundUser) {
-        // Simpan user ke localStorage
-        localStorage.setItem("user", JSON.stringify(foundUser));
-        navigate("/dashboard");
-      } else {
-        setError("Username atau password salah");
-      }
-      setLoading(false);
-    }, 1000); // Delay untuk simulasi loading
-  };
+    if (response.ok) {
+      // Simpan token dan user ke localStorage
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("user", JSON.stringify(data.user));
+
+      console.log("Login successful", data);
+      navigate("/dashboard");
+      console.log("Navigated to /dashboard");
+    } else {
+      setError(data.message || "Login failed");
+    }
+  // eslint-disable-next-line no-unused-vars
+  } catch (error) {
+    setError("Username atau password salah");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <div className="flex h-screen w-full">
