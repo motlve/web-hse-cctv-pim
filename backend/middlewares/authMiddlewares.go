@@ -1,18 +1,14 @@
 package middlewares
 
 import (
-	"backend/utils"
 	"context"
-	"fmt"
-	"github.com/dgrijalva/jwt-go"
 	"net/http"
 	"strings"
+
+	"backend/utils"
+
+	"github.com/golang-jwt/jwt/v4"
 )
-
-// Buat key unik untuk context
-type contextKey string
-
-const UsernameKey contextKey = "username"
 
 func AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -22,56 +18,33 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
+		// Format: "Bearer <token>"
 		parts := strings.Split(authHeader, " ")
 		if len(parts) != 2 || parts[0] != "Bearer" {
 			http.Error(w, "Invalid Authorization header format", http.StatusUnauthorized)
 			return
 		}
-
 		tokenString := parts[1]
 
-		// Validasi token
 		token, err := utils.ValidateJWTToken(tokenString)
-		if err != nil || !token.Valid {
-			http.Error(w, "Invalid Token", http.StatusUnauthorized)
+		if err != nil {
+			http.Error(w, "Invalid token: "+err.Error(), http.StatusUnauthorized)
 			return
 		}
 
-		// Ambil claims
 		claims, ok := token.Claims.(jwt.MapClaims)
-		if !ok {
-			http.Error(w, "Invalid Token Claims", http.StatusUnauthorized)
+		if !ok || !token.Valid {
+			http.Error(w, "Invalid token claims", http.StatusUnauthorized)
 			return
 		}
 
-		// Ambil claims
-		claims, ok = token.Claims.(jwt.MapClaims)
-		if !ok {
-			http.Error(w, "Invalid Token Claims", http.StatusUnauthorized)
-			return
-		}
-
-		// DEBUG: print seluruh claims
-		fmt.Printf("Claims: %+v\n", claims)
-
-		// Ambil username dari claims
 		username, ok := claims["username"].(string)
 		if !ok {
-			http.Error(w, "Username not found in token", http.StatusUnauthorized)
+			http.Error(w, "Invalid token username", http.StatusUnauthorized)
 			return
 		}
 
-		// Ambil username dari claims
-		username, ok = claims["username"].(string)
-		if !ok {
-			http.Error(w, "Username not found in token", http.StatusUnauthorized)
-			return
-		}
-
-		// Simpan username ke context
-		ctx := context.WithValue(r.Context(), UsernameKey, username)
-
-		// Teruskan request ke handler berikutnya
+		ctx := context.WithValue(r.Context(), "username", username)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

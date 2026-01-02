@@ -30,7 +30,8 @@ export default function Sidebar() {
       location.pathname.startsWith("/id-cctv") ||
       location.pathname.startsWith("/summary") ||
       location.pathname.startsWith("/data-lokasi") ||
-      location.pathname.startsWith("/kategori")
+      location.pathname.startsWith("/kategori") ||
+      location.pathname.startsWith("/petugas")
     );
   }, [location.pathname]);
 
@@ -39,7 +40,7 @@ export default function Sidebar() {
     return (
       location.pathname.startsWith("/incident-record") ||
       location.pathname.startsWith("/performance") ||
-      location.pathname.startsWith("/summary-request") ||
+      location.pathname.startsWith("/cctv-requests") ||
       location.pathname.startsWith("/camera-trouble")
     );
   }, [location.pathname]);
@@ -77,9 +78,8 @@ export default function Sidebar() {
             aria-expanded={dashboardOpen}
             aria-controls="dashboard-menu"
             onClick={() => setDashboardOpen((prev) => !prev)}
-            className={`w-full flex items-center justify-between px-2 py-2 rounded-md ${
-              isDashboardActive ? activeClass : defaultClass
-            }`}
+            className={`w-full flex items-center justify-between px-2 py-2 rounded-md ${isDashboardActive ? activeClass : defaultClass
+              }`}
           >
             <div className="flex items-center space-x-2">
               <FaHome
@@ -99,11 +99,10 @@ export default function Sidebar() {
             >
               <Link
                 to="/id-cctv"
-                className={`flex items-center space-x-2 px-2 py-1 rounded-md ${
-                  isActive("/id-cctv")
+                className={`flex items-center space-x-2 px-2 py-1 rounded-md ${isActive("/id-cctv")
                     ? activeClass
                     : "text-gray-700 hover:text-blue-600"
-                }`}
+                  }`}
                 role="menuitem"
               >
                 <FaCamera
@@ -114,11 +113,10 @@ export default function Sidebar() {
 
               <Link
                 to="/summary"
-                className={`flex items-center space-x-2 px-2 py-1 rounded-md ${
-                  isActive("/summary")
+                className={`flex items-center space-x-2 px-2 py-1 rounded-md ${isActive("/summary")
                     ? activeClass
                     : "text-gray-700 hover:text-blue-600"
-                }`}
+                  }`}
                 role="menuitem"
               >
                 <FaClipboardList
@@ -128,12 +126,25 @@ export default function Sidebar() {
               </Link>
 
               <Link
-                to="/data-lokasi"
-                className={`flex items-center space-x-2 px-2 py-1 rounded-md ${
-                  isActive("/data-lokasi")
+                to="/petugas"
+                className={`flex items-center space-x-2 px-2 py-1 rounded-md ${isActive("/petugas")
                     ? activeClass
                     : "text-gray-700 hover:text-blue-600"
-                }`}
+                  }`}
+                role="menuitem"
+              >
+                <FaClipboardList
+                  className={isActive("/petugas") ? iconActiveClass : "text-gray-700"}
+                />
+                <span>Petugas CCTV</span>
+              </Link>
+
+              <Link
+                to="/data-lokasi"
+                className={`flex items-center space-x-2 px-2 py-1 rounded-md ${isActive("/data-lokasi")
+                    ? activeClass
+                    : "text-gray-700 hover:text-blue-600"
+                  }`}
                 role="menuitem"
               >
                 <FaList
@@ -144,11 +155,10 @@ export default function Sidebar() {
 
               <Link
                 to="/kategori"
-                className={`flex items-center space-x-2 px-2 py-1 rounded-md ${
-                  isActive("/kategori")
+                className={`flex items-center space-x-2 px-2 py-1 rounded-md ${isActive("/kategori")
                     ? activeClass
                     : "text-gray-700 hover:text-blue-600"
-                }`}
+                  }`}
                 role="menuitem"
               >
                 <FaClipboardList
@@ -169,9 +179,8 @@ export default function Sidebar() {
             aria-expanded={formOpen}
             aria-controls="form-menu"
             onClick={() => setFormOpen((prev) => !prev)}
-            className={`w-full flex items-center justify-between px-2 py-2 rounded-md ${
-              isFormActive ? activeClass : defaultClass
-            }`}
+            className={`w-full flex items-center justify-between px-2 py-2 rounded-md ${isFormActive ? activeClass : defaultClass
+              }`}
           >
             <div className="flex items-center space-x-2">
               <FaWpforms
@@ -191,11 +200,10 @@ export default function Sidebar() {
             >
               <Link
                 to="/camera-trouble"
-                className={`flex items-center space-x-2 px-2 py-1 rounded-md ${
-                  isActive("/camera-trouble")
+                className={`flex items-center space-x-2 px-2 py-1 rounded-md ${isActive("/camera-trouble")
                     ? activeClass
                     : "text-gray-700 hover:text-blue-600"
-                }`}
+                  }`}
                 role="menuitem"
               >
                 <FaList
@@ -206,11 +214,10 @@ export default function Sidebar() {
 
               <Link
                 to="/incident-record"
-                className={`flex items-center space-x-2 px-2 py-1 rounded-md ${
-                  isActive("/incident-record")
+                className={`flex items-center space-x-2 px-2 py-1 rounded-md ${isActive("/incident-record")
                     ? activeClass
                     : "text-gray-700 hover:text-blue-600"
-                }`}
+                  }`}
                 role="menuitem"
               >
                 <FaClipboardList
@@ -221,11 +228,10 @@ export default function Sidebar() {
 
               <Link
                 to="/performance"
-                className={`flex items-center space-x-2 px-2 py-1 rounded-md ${
-                  isActive("/performance")
+                className={`flex items-center space-x-2 px-2 py-1 rounded-md ${isActive("/performance")
                     ? activeClass
                     : "text-gray-700 hover:text-blue-600"
-                }`}
+                  }`}
                 role="menuitem"
               >
                 <FaCamera
@@ -235,16 +241,15 @@ export default function Sidebar() {
               </Link>
 
               <Link
-                to="/summary-request"
-                className={`flex items-center space-x-2 px-2 py-1 rounded-md ${
-                  isActive("/summary-request")
+                to="/cctv-requests"
+                className={`flex items-center space-x-2 px-2 py-1 rounded-md ${isActive("/cctv-requests")
                     ? activeClass
                     : "text-gray-700 hover:text-blue-600"
-                }`}
+                  }`}
                 role="menuitem"
               >
                 <FaCamera
-                  className={isActive("/summary-request") ? iconActiveClass : "text-gray-700"}
+                  className={isActive("/cctv-requests") ? iconActiveClass : "text-gray-700"}
                 />
                 <span>Summary Request</span>
               </Link>

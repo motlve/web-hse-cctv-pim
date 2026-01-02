@@ -5,61 +5,39 @@ import (
 	"backend/middlewares"
 	"backend/models"
 	"backend/routers"
-	"fmt"
 	"log"
 	"net/http"
-
-	"golang.org/x/crypto/bcrypt"
 )
-
-func hashPassword(password string) string {
-	hashed, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	if err != nil {
-		log.Fatal(err)
-	}
-	return string(hashed)
-}
-
-func seedUser() {
-	var count int64
-	config.DB.Model(&models.User{}).Count(&count)
-	if count == 0 {
-		users := []models.User{
-			{
-				Username: "Yudha",
-				Password: hashPassword("managerhse001"),
-				Role:     "Manager HSE",
-			},
-			{
-				Username: "Aji",
-				Password: hashPassword("hse001"),
-				Role:     "HSE",
-			},
-			{
-				Username: "Rizky",
-				Password: hashPassword("cctv001"),
-				Role:     "Petugas CCTV",
-			},
-		}
-		for _, user := range users {
-			config.DB.Create(&user)
-		}
-		fmt.Println("Seeded users to database")
-	}
-}
 
 func main() {
 	config.ConnectionDatabase()
-	config.DB.AutoMigrate(&models.User{})
 
-	seedUser()
+	// 1️⃣ Auto migrate semua model
+	err := config.DB.AutoMigrate(
+		&models.User{},
+		&models.IncidentRecord{},
+		&models.CategoryModels{},
+		&models.OfficerModels{},
+		&models.LocationModels{},
+		&models.ListCameraTrouble{},
+		&models.IDCCTVModels{},
+		&models.SummaryRequestCamera{},
+	)
+	if err != nil {
+		log.Fatalf("Failed to auto migrate database: %v", err)
+	}
+	log.Println("Database migration completed successfully.")
 
+	// 2️⃣ Jalankan seed user di sini (sebelum server start)
+	models.SeedDefaultUsers(config.DB)
+
+	// 3️⃣ Siapkan router dan middleware
 	mux := routers.SetupRouters()
-
 	handler := middlewares.CorsMiddlewares(mux)
 
-	log.Println("Server running on :3000")
-	if err := http.ListenAndServe(":3000", handler); err != nil {
+	// 4️⃣ Jalankan server
+	log.Println("Server running on :8081")
+	if err := http.ListenAndServe(":8081", handler); err != nil {
 		log.Fatal(err)
 	}
 }

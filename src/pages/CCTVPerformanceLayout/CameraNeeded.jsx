@@ -78,8 +78,6 @@ export default function CameraNeeded() {
         setShowForm(false);
     };
 
-    // ... kode sebelumnya tetap sama ...
-
     return (
         <div className="p-6 bg-white/30 backdrop-blur-md rounded-xl relative max-w-7xl mx-auto">
             {/* Chart placeholder */}
@@ -104,7 +102,7 @@ export default function CameraNeeded() {
             </div>
 
             <div className="flex justify-between items-center mb-6">
-                <h1 className="text-2xl font-bold text-gray-800">Service Performance</h1>
+                <h1 className="text-2xl font-bold text-gray-800">Camera Needed</h1>
                 <input
                     type="text"
                     name="search"
@@ -115,7 +113,7 @@ export default function CameraNeeded() {
                 />
             </div>
 
-            <h2 className="text-lg font-semibold mb-2">Service Performance Table</h2>
+            <h2 className="text-lg font-semibold mb-2">Camera Needed Table</h2>
             <div className="overflow-auto rounded-xl shadow-md bg-white/60 backdrop-blur-md mb-4">
                 <table className="min-w-[900px] w-full text-sm text-left text-gray-800">
                     <thead className="text-xs uppercase bg-gray-200/70 text-gray-700">

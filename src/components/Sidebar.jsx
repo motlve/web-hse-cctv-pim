@@ -2,268 +2,186 @@ import { useState, useEffect, useMemo } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   FaHome,
-  FaCamera,
-  FaClipboardList,
-  FaList,
+  FaWpforms,
   FaSignOutAlt,
   FaChevronDown,
   FaChevronUp,
-  FaWpforms,
+  FaTimes,
 } from "react-icons/fa";
-
 import Logo from "../assets/images/logo.png";
 
-export default function Sidebar() {
+export default function Sidebar({ onClose }) {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // State untuk buka tutup dropdown
   const [dashboardOpen, setDashboardOpen] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
 
-  // Fungsi untuk cek path mana aktif
   const isActive = (path) => location.pathname === path;
 
-  // Memoize fungsi cek apakah path termasuk group Dashboard
   const isDashboardActive = useMemo(() => {
     return (
       location.pathname.startsWith("/id-cctv") ||
       location.pathname.startsWith("/summary") ||
       location.pathname.startsWith("/data-lokasi") ||
-      location.pathname.startsWith("/kategori")
+      location.pathname.startsWith("/kategori") ||
+      location.pathname.startsWith("/petugas")
     );
   }, [location.pathname]);
 
-  // Memoize fungsi cek apakah path termasuk group Form
   const isFormActive = useMemo(() => {
     return (
       location.pathname.startsWith("/incident-record") ||
       location.pathname.startsWith("/performance") ||
-      location.pathname.startsWith("/summary-request") ||
-      location.pathname.startsWith("/camera-trouble")
+      location.pathname.startsWith("/summary-request-camera") ||
+      location.pathname.startsWith("/list-camera-trouble")
     );
   }, [location.pathname]);
 
-  // Handle Logout
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
-    navigate("/api/login");
+    navigate("/login");
   };
 
-  // Sync dropdown open state dengan aktifnya submenu
   useEffect(() => {
     setDashboardOpen(isDashboardActive);
     setFormOpen(isFormActive);
   }, [isDashboardActive, isFormActive]);
 
-  // Styling class
   const activeClass = "text-blue-600 font-semibold";
   const defaultClass = "text-gray-800 hover:text-blue-600";
-  const iconActiveClass = "text-blue-600";
-  const iconDefaultClass = "text-gray-800 group-hover:text-blue-600";
 
   return (
-    <div className="w-full h-full bg-white shadow-md px-4 py-6 rounded-none flex flex-col">
-      <div className="text-center mb-6">
-        <img src={Logo} alt="Logo" className="w-80 mx-auto" />
+    <div className="h-full flex flex-col px-4 py-6 overflow-y-auto">
+      {/* Mobile Header */}
+      <div className="flex justify-between items-center mb-6 lg:hidden">
+        <img src={Logo} alt="Logo" className="w-40" />
+        <button onClick={onClose} className="text-gray-600">
+          <FaTimes size={22} />
+        </button>
       </div>
 
-      <nav className="flex flex-col space-y-2 flex-grow overflow-auto">
-        {/* Dashboard Dropdown */}
+      {/* Desktop Logo */}
+      <div className="hidden lg:flex justify-center mb-6">
+        <img src={Logo} alt="Logo" className="w-60" />
+      </div>
+
+      <nav className="flex flex-col space-y-2 flex-grow">
+        {/* DASHBOARD */}
         <div>
           <button
-            type="button"
-            aria-expanded={dashboardOpen}
-            aria-controls="dashboard-menu"
-            onClick={() => setDashboardOpen((prev) => !prev)}
+            onClick={() => setDashboardOpen(!dashboardOpen)}
             className={`w-full flex items-center justify-between px-2 py-2 rounded-md ${
               isDashboardActive ? activeClass : defaultClass
             }`}
           >
             <div className="flex items-center space-x-2">
-              <FaHome
-                className={isDashboardActive ? iconActiveClass : iconDefaultClass}
-              />
+              <FaHome />
               <span>Dashboard</span>
             </div>
             {dashboardOpen ? <FaChevronUp /> : <FaChevronDown />}
           </button>
 
           {dashboardOpen && (
-            <div
-              id="dashboard-menu"
-              className="ml-6 mt-1 flex flex-col space-y-1"
-              role="menu"
-              aria-label="Dashboard submenu"
-            >
-              <Link
+            <div className="ml-6 mt-1 flex flex-col space-y-1">
+              <SidebarLink
                 to="/id-cctv"
-                className={`flex items-center space-x-2 px-2 py-1 rounded-md ${
-                  isActive("/id-cctv")
-                    ? activeClass
-                    : "text-gray-700 hover:text-blue-600"
-                }`}
-                role="menuitem"
-              >
-                <FaCamera
-                  className={isActive("/id-cctv") ? iconActiveClass : "text-gray-700"}
-                />
-                <span>ID CCTV</span>
-              </Link>
-
-              <Link
+                label="ID CCTV"
+                active={isActive("/id-cctv")}
+              />
+              <SidebarLink
                 to="/summary"
-                className={`flex items-center space-x-2 px-2 py-1 rounded-md ${
-                  isActive("/summary")
-                    ? activeClass
-                    : "text-gray-700 hover:text-blue-600"
-                }`}
-                role="menuitem"
-              >
-                <FaClipboardList
-                  className={isActive("/summary") ? iconActiveClass : "text-gray-700"}
-                />
-                <span>Summary</span>
-              </Link>
-
-              <Link
+                label="Summary"
+                active={isActive("/summary")}
+              />
+              <SidebarLink
+                to="/petugas"
+                label="Petugas CCTV"
+                active={isActive("/petugas")}
+              />
+              <SidebarLink
                 to="/data-lokasi"
-                className={`flex items-center space-x-2 px-2 py-1 rounded-md ${
-                  isActive("/data-lokasi")
-                    ? activeClass
-                    : "text-gray-700 hover:text-blue-600"
-                }`}
-                role="menuitem"
-              >
-                <FaList
-                  className={isActive("/data-lokasi") ? iconActiveClass : "text-gray-700"}
-                />
-                <span>Data Lokasi</span>
-              </Link>
-
-              <Link
+                label="Data Lokasi"
+                active={isActive("/data-lokasi")}
+              />
+              <SidebarLink
                 to="/kategori"
-                className={`flex items-center space-x-2 px-2 py-1 rounded-md ${
-                  isActive("/kategori")
-                    ? activeClass
-                    : "text-gray-700 hover:text-blue-600"
-                }`}
-                role="menuitem"
-              >
-                <FaClipboardList
-                  className={isActive("/kategori") ? iconActiveClass : "text-gray-700"}
-                />
-                <span>Kategori</span>
-              </Link>
+                label="Kategori"
+                active={isActive("/kategori")}
+              />
             </div>
           )}
         </div>
 
         <hr className="my-3" />
 
-        {/* Form Dropdown */}
+        {/* FORM */}
         <div>
           <button
-            type="button"
-            aria-expanded={formOpen}
-            aria-controls="form-menu"
-            onClick={() => setFormOpen((prev) => !prev)}
+            onClick={() => setFormOpen(!formOpen)}
             className={`w-full flex items-center justify-between px-2 py-2 rounded-md ${
               isFormActive ? activeClass : defaultClass
             }`}
           >
             <div className="flex items-center space-x-2">
-              <FaWpforms
-                className={isFormActive ? iconActiveClass : iconDefaultClass}
-              />
+              <FaWpforms />
               <span>Form</span>
             </div>
             {formOpen ? <FaChevronUp /> : <FaChevronDown />}
           </button>
 
           {formOpen && (
-            <div
-              id="form-menu"
-              className="ml-6 mt-1 flex flex-col space-y-1"
-              role="menu"
-              aria-label="Form submenu"
-            >
-              <Link
-                to="/camera-trouble"
-                className={`flex items-center space-x-2 px-2 py-1 rounded-md ${
-                  isActive("/camera-trouble")
-                    ? activeClass
-                    : "text-gray-700 hover:text-blue-600"
-                }`}
-                role="menuitem"
-              >
-                <FaList
-                  className={isActive("/camera-trouble") ? iconActiveClass : "text-gray-700"}
-                />
-                <span>List Camera Trouble</span>
-              </Link>
-
-              <Link
+            <div className="ml-6 mt-1 flex flex-col space-y-1">
+              <SidebarLink
+                to="/list-camera-trouble"
+                label="List Camera Trouble"
+                active={isActive("/list-camera-trouble")}
+              />
+              <SidebarLink
                 to="/incident-record"
-                className={`flex items-center space-x-2 px-2 py-1 rounded-md ${
-                  isActive("/incident-record")
-                    ? activeClass
-                    : "text-gray-700 hover:text-blue-600"
-                }`}
-                role="menuitem"
-              >
-                <FaClipboardList
-                  className={isActive("/incident-record") ? iconActiveClass : "text-gray-700"}
-                />
-                <span>Incident Record</span>
-              </Link>
-
-              <Link
+                label="Incident Record"
+                active={isActive("/incident-record")}
+              />
+              <SidebarLink
                 to="/performance"
-                className={`flex items-center space-x-2 px-2 py-1 rounded-md ${
-                  isActive("/performance")
-                    ? activeClass
-                    : "text-gray-700 hover:text-blue-600"
-                }`}
-                role="menuitem"
-              >
-                <FaCamera
-                  className={isActive("/performance") ? iconActiveClass : "text-gray-700"}
-                />
-                <span>CCTV Performance</span>
-              </Link>
-
-              <Link
-                to="/summary-request"
-                className={`flex items-center space-x-2 px-2 py-1 rounded-md ${
-                  isActive("/summary-request")
-                    ? activeClass
-                    : "text-gray-700 hover:text-blue-600"
-                }`}
-                role="menuitem"
-              >
-                <FaCamera
-                  className={isActive("/summary-request") ? iconActiveClass : "text-gray-700"}
-                />
-                <span>Summary Request</span>
-              </Link>
+                label="CCTV Performance"
+                active={isActive("/performance")}
+              />
+              <SidebarLink
+                to="/summary-request-camera"
+                label="Summary Request Camera"
+                active={isActive("/summary-request-camera")}
+              />
             </div>
           )}
         </div>
       </nav>
 
-      {/* Logout fixed di bawah */}
+      {/* Logout */}
       <div className="pt-6">
         <button
           type="button"
           onClick={handleLogout}
-          className="flex items-center space-x-2 text-red-500 hover:text-red-700 cursor-pointer"
+          className="flex items-center space-x-2 text-red-500 hover:text-red-700"
         >
           <FaSignOutAlt />
           <span>Logout</span>
         </button>
       </div>
     </div>
+  );
+}
+
+function SidebarLink({ to, label, active }) {
+  return (
+    <Link
+      to={to}
+      className={`flex items-center space-x-2 px-2 py-1 rounded-md ${
+        active ? "text-blue-600 font-semibold" : "text-gray-700 hover:text-blue-600"
+      }`}
+    >
+      <span>{label}</span>
+    </Link>
   );
 }
