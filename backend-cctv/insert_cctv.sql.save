@@ -1,0 +1,19 @@
+INSERT INTO id_cctv
+(
+id_camera,
+id_nvr,
+lokasi,
+area
+)
+VALUES
+('PIM3-B3-1-5','NVR 1','Basement 3','PIM 3'),
+('PIM3-B3-1-6','NVR 1','Basement 3','PIM 3'),
+('PIM3-B3-1-7','NVR 1','Basement 3','PIM 3'),
+('PIM3-B3-1-8','NVR 1','Basement 3','PIM 3'),
+('PIM3-B3-1-9','NVR 1','Basement 3','PIM 3'),
+('PIM3-B3-1-10','NVR 1','Basement 3','PIM 3'),
+
+...
+lanjutkan semua data sampai
+
+('PIM3-G-30-14','NVR 30','Jalur Kartika','PIM 3');

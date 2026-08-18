@@ -1,0 +1,48 @@
+services:
+  mysql:
+    image: mysql:8
+    container_name: mysql-hse
+    restart: always
+    environment:
+      MYSQL_DATABASE: db_hse_cctv_pim
+      MYSQL_USER: cctv_app
+      MYSQL_PASSWORD: CctvPIM@2026Secure
+      MYSQL_ROOT_PASSWORD: RootMysqlSecure2026!
+    volumes:
+      - backend_mysql_data:/var/lib/mysql
+    networks:
+      - hse-network
+
+  backend:
+    build:
+      context: ./backend-cctv
+    container_name: backend-hse
+    restart: always
+    depends_on:
+      - mysql
+    env_file:
+      - ./backend-cctv/.env
+    ports:
+      - '8081:8081'
+    networks:
+      - hse-network
+
+  frontend:
+    build:
+      context: .
+    container_name: frontend-hse
+    restart: always
+    depends_on:
+      - backend
+    ports:
+      - '80:80'
+    networks:
+      - hse-network
+
+volumes:
+  backend_mysql_data:
+    external: true
+
+networks:
+  hse-network:
+    driver: bridge

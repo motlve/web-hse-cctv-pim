@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 @layer utilities {
   .animate-fade-in {
@@ -16,33 +16,235 @@
     }
   }
 
-.flatpickr-calendar {
-  border-radius: 12px;
-  padding: 8px;
-  box-shadow: 0 8px 30px rgba(0,0,0,0.15);
-  font-family: Inter, sans-serif;
+  .flatpickr-calendar {
+    border-radius: 12px;
+    padding: 8px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+    font-family: Inter, sans-serif;
+  }
+
+  .flatpickr-months .flatpickr-month {
+    font-size: 16px;
+    font-weight: 600;
+  }
+
+  .flatpickr-weekdays span {
+    font-weight: 600;
+    font-size: 12px;
+  }
+
+  .flatpickr-day.selected,
+  .flatpickr-day.startRange,
+  .flatpickr-day.endRange {
+    background: #2563eb !important;
+    border-color: #2563eb !important;
+    color: white !important;
+  }
+
+  .flatpickr-time input {
+    font-size: 15px !important;
+  }
 }
 
-.flatpickr-months .flatpickr-month {
-  font-size: 16px;
+.flatpickr-monthSelect-month {
+  border-radius: 14px !important;
   font-weight: 600;
 }
 
-.flatpickr-weekdays span {
-  font-weight: 600;
-  font-size: 12px;
+.flatpickr-monthSelect-month:hover {
+  background: #dbeafe !important;
 }
 
-.flatpickr-day.selected,
-.flatpickr-day.startRange,
-.flatpickr-day.endRange {
+.flatpickr-monthSelect-month.selected {
   background: #2563eb !important;
-  border-color: #2563eb !important;
+}
+
+.flatpickr-day {
+  position: relative;
+}
+
+/* LIBUR NASIONAL */
+
+.flatpickr-day.holiday-national {
+  background: #fee2e2 !important;
+
+  color: #dc2626 !important;
+
+  font-weight: 800;
+
+  border-radius: 14px;
+}
+
+.flatpickr-day.holiday-national::after {
+  content: '';
+
+  position: absolute;
+
+  bottom: 4px;
+
+  left: 50%;
+
+  transform: translateX(-50%);
+
+  width: 7px;
+
+  height: 7px;
+
+  border-radius: 50%;
+
+  background: #ef4444;
+}
+
+/* WEEKEND */
+
+.flatpickr-day.holiday-sunday {
+  color: #ef4444 !important;
+
+  font-weight: 700;
+}
+
+.flatpickr-day.holiday-sunday::after {
+  content: '';
+
+  position: absolute;
+
+  bottom: 4px;
+
+  left: 50%;
+
+  transform: translateX(-50%);
+
+  width: 5px;
+
+  height: 5px;
+
+  border-radius: 50%;
+
+  background: #f87171;
+}
+
+/* TODAY */
+
+.flatpickr-day.today-monitoring {
+  background: #2563eb !important;
+
   color: white !important;
+
+  border-radius: 14px !important;
 }
 
-.flatpickr-time input {
+@keyframes floatLogo {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-12px);
+  }
+}
+
+@keyframes scan {
+  0% {
+    top: 0%;
+  }
+
+  100% {
+    top: 100%;
+  }
+}
+
+@keyframes radar {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-float {
+  animation: floatLogo 3s ease-in-out infinite;
+}
+
+.animate-scan {
+  animation: scan 2.5s linear infinite;
+}
+
+.animate-radar {
+  animation: radar 2s linear infinite;
+}
+
+.swal2-container {
+  z-index: 99999 !important;
+}
+
+/* ===== Apple-style SweetAlert2 ===== */
+.apple-swal-popup {
+  border-radius: 28px !important;
+  padding: 28px 24px !important;
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif !important;
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.18) !important;
+}
+
+.apple-swal-title {
+  font-size: 20px !important;
+  font-weight: 700 !important;
+  color: #1c1c1e !important;
+  margin-top: 8px !important;
+}
+
+.apple-swal-html {
+  font-size: 14px !important;
+  color: #6b7280 !important;
+  line-height: 1.6 !important;
+}
+
+.apple-swal-confirm {
+  border-radius: 14px !important;
+  padding: 12px 28px !important;
+  font-weight: 600 !important;
   font-size: 15px !important;
+  box-shadow: none !important;
+  transition:
+    transform 0.15s ease,
+    opacity 0.15s ease !important;
+}
+.apple-swal-confirm:hover {
+  transform: scale(1.03);
+  opacity: 0.9;
 }
 
+.apple-swal-cancel {
+  border-radius: 14px !important;
+  padding: 12px 28px !important;
+  font-weight: 600 !important;
+  font-size: 15px !important;
+  background: #f2f2f7 !important;
+  color: #1c1c1e !important;
+  box-shadow: none !important;
+  transition:
+    transform 0.15s ease,
+    opacity 0.15s ease !important;
+}
+.apple-swal-cancel:hover {
+  transform: scale(1.03);
+  opacity: 0.85;
+}
+
+.apple-swal-actions {
+  gap: 10px !important;
+  margin-top: 20px !important;
+}
+
+.apple-swal-icon {
+  transform: scale(0.85);
+}
+
+/* Backdrop blur ala iOS */
+.apple-swal-backdrop {
+  background: rgba(0, 0, 0, 0.35) !important;
+  backdrop-filter: blur(6px) !important;
 }

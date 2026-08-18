@@ -1,0 +1,30 @@
+services:
+  mysql:
+    image: mysql:8
+    container_name: mysql-hse
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: db_hse_cctv_pim
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  backend:
+    build: .
+    container_name: backend-hse
+    restart: always
+    depends_on:
+      - mysql
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USER: root
+      DB_PASSWORD: root123
+      DB_NAME: db_hse_cctv_pim
+    ports:
+      - "8081:8081"
+
+volumes:
+  mysql_data:
