@@ -110,7 +110,7 @@ export default function Sidebar({ onClose }) {
       });
     } finally {
       localStorage.clear();
-      navigate('/login');
+      navigate('/dashboard/login');
     }
   };
 
