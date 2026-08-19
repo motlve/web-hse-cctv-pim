@@ -274,7 +274,7 @@ export default function ServicePerformanceCam() {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
 
-        window.location.href = '/login';
+        window.location.href = '/dashboard/login';
       }
     }
   };

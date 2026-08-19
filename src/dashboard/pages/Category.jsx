@@ -101,7 +101,7 @@ export default function DataKategori() {
         alert('Sesi Anda telah berakhir atau tidak valid. Silakan login kembali.');
 
         localStorage.removeItem('token');
-        window.location.href = '/login';
+        window.location.href = '/dashboard/login';
         return;
       }
 
@@ -135,7 +135,7 @@ export default function DataKategori() {
 
       if (error.response?.status === 401) {
         localStorage.removeItem('token');
-        window.location.href = '/login';
+        window.location.href = '/dashboard/login';
       }
     }
   };

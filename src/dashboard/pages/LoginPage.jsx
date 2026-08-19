@@ -162,7 +162,7 @@ export default function LoginPage() {
 
       localStorage.setItem('hasLoginBefore', 'true');
 
-      window.location.href = '/id-cctv';
+      window.location.href = '/dashboard/id-cctv';
     } catch (error) {
       setIsLoading(false);
 

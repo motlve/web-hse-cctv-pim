@@ -86,7 +86,7 @@ export default function DataLokasi() {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
 
-        window.location.href = '/login';
+        window.location.href = '/dashboard/login';
 
         return;
       }
@@ -125,7 +125,7 @@ export default function DataLokasi() {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
 
-        window.location.href = '/login';
+        window.location.href = '/dashboard/login';
       }
     }
   };

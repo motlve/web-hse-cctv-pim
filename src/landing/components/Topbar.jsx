@@ -1,31 +1,53 @@
 import { useState } from 'react';
-import { Phone, Clock, Menu, X, ShieldCheck, ChevronDown, LogIn, Video } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import {
+  Phone,
+  Clock,
+  Menu,
+  X,
+  ShieldCheck,
+  ChevronDown,
+  LogIn,
+  Video,
+  HeartPulse,
+} from 'lucide-react';
+import { HoverDropdown } from './HoverDropdown';
 
 const NAV_LINKS = [
   { label: 'Beranda', href: '#beranda' },
   { label: 'Tentang Kami', href: '#tentang' },
   { label: 'Kebijakan HSE', href: '#kebijakan' },
+  { label: 'Program', href: '#program-hse' },
   {
     label: 'Fasilitas',
-    href: '#fasilitas',
+    href: '#fasilitas-hse',
     children: [
-      { label: 'Sistem Monitoring', href: '#monitoring' },
-      { label: 'Fasilitas Kesehatan', href: '#kesehatan' },
-      { label: 'Proteksi Kebakaran', href: '#kebakaran' },
+      { label: 'Fasilitas HSE', href: '#fasilitas-hse' },
+      { label: 'Sistem Monitoring CCTV', href: '#fasilitas-cctv' },
+      { label: 'Proteksi Kebakaran', href: '#fasilitas-kebakaran' },
+      { label: 'Fasilitas Kesehatan', href: '#fasilitas-kesehatan' },
     ],
   },
   { label: 'Statistik', href: '#statistik' },
   { label: 'Kontak', href: '#kontak' },
 ];
 
-export default function HseTopbar() {
+export default function Topbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [facilityOpen, setFacilityOpen] = useState(false);
-  const [loginOpen, setLoginOpen] = useState(false);
 
   return (
+    // NOTE: Topbar & Footer TIDAK ikut discroll — layout halaman
+    // (lihat Layout.jsx) menaruh Topbar & Footer sebagai elemen tetap
+    // di luar area scroll, dan hanya <main> yang overflow-y-auto.
+    // Jadi header di sini cukup "relative z-50" (bukan sticky/fixed)
+    // karena dia memang sudah selalu terlihat tanpa perlu sticky.
+    //
+    // Dropdown "Fasilitas" & "Login" di-render lewat Portal (lihat
+    // HoverDropdown.jsx) supaya tidak kepotong oleh overflow-hidden
+    // di Layout.jsx, jadi z-50 di sini tinggal formalitas urutan tumpuk
+    // biasa (bukan lagi solusi utama untuk masalah clipping).
     <header
-      className="w-full font-sans"
+      className="w-full font-sans relative z-50 shrink-0"
       style={{ fontFamily: "'Inter', ui-sans-serif, system-ui, sans-serif" }}
     >
       {/* Utility strip */}
@@ -93,37 +115,35 @@ export default function HseTopbar() {
             <nav className="hidden lg:flex items-center gap-1">
               {NAV_LINKS.map((link) =>
                 link.children ? (
-                  <div
+                  <HoverDropdown
                     key={link.label}
-                    className="relative"
-                    onMouseEnter={() => setFacilityOpen(true)}
-                    onMouseLeave={() => setFacilityOpen(false)}
-                  >
-                    <button
-                      className="flex items-center gap-1 px-3.5 py-2 text-sm rounded-sm transition-colors"
-                      style={{ color: '#2A2A26' }}
-                    >
-                      {link.label}
-                      <ChevronDown size={14} strokeWidth={2} />
-                    </button>
-                    {facilityOpen && (
-                      <div
-                        className="absolute top-full left-0 mt-0 min-w-[200px] rounded-sm border shadow-sm py-1.5"
-                        style={{ backgroundColor: '#FFFFFF', borderColor: '#E4DFD2' }}
+                    align="left"
+                    trigger={
+                      <button
+                        className="flex items-center gap-1 px-3.5 py-2 text-sm rounded-sm transition-colors"
+                        style={{ color: '#2A2A26' }}
                       >
-                        {link.children.map((child) => (
-                          <a
-                            key={child.label}
-                            href={child.href}
-                            className="block px-4 py-2 text-sm hover:bg-[#F3EEE1] transition-colors"
-                            style={{ color: '#3A3A34' }}
-                          >
-                            {child.label}
-                          </a>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+                        {link.label}
+                        <ChevronDown size={14} strokeWidth={2} />
+                      </button>
+                    }
+                  >
+                    <div
+                      className="min-w-[220px] rounded-sm border shadow-sm py-1.5"
+                      style={{ backgroundColor: '#FFFFFF', borderColor: '#E4DFD2' }}
+                    >
+                      {link.children.map((child) => (
+                        <a
+                          key={child.label}
+                          href={child.href}
+                          className="block px-4 py-2 text-sm hover:bg-[#F3EEE1] transition-colors"
+                          style={{ color: '#3A3A34' }}
+                        >
+                          {child.label}
+                        </a>
+                      ))}
+                    </div>
+                  </HoverDropdown>
                 ) : (
                   <a
                     key={link.label}
@@ -147,60 +167,75 @@ export default function HseTopbar() {
                 Hubungi Tim HSE
               </a>
 
-              <div
-                className="relative"
-                onMouseEnter={() => setLoginOpen(true)}
-                onMouseLeave={() => setLoginOpen(false)}
-              >
-                <button
-                  className="flex items-center gap-1.5 text-sm font-medium px-4 py-2 rounded-sm border transition-colors"
-                  style={{ borderColor: '#6B1414', color: '#6B1414' }}
-                >
-                  <LogIn size={15} strokeWidth={2} />
-                  Login
-                  <ChevronDown size={14} strokeWidth={2} />
-                </button>
-
-                {loginOpen && (
-                  <div
-                    className="absolute top-full right-0 mt-0 min-w-[220px] rounded-sm border shadow-sm py-1.5"
-                    style={{ backgroundColor: '#FFFFFF', borderColor: '#E4DFD2' }}
+              <HoverDropdown
+                align="right"
+                trigger={
+                  <button
+                    className="flex items-center gap-1.5 text-sm font-medium px-4 py-2 rounded-sm border transition-colors"
+                    style={{ borderColor: '#6B1414', color: '#6B1414' }}
                   >
-                    <a
-                      href="/login/hse"
-                      className="flex items-start gap-3 px-4 py-2.5 hover:bg-[#F3EEE1] transition-colors"
-                    >
-                      <ShieldCheck
-                        size={17}
-                        strokeWidth={2}
-                        style={{ color: '#6B1414', marginTop: 2 }}
-                      />
-                      <span>
-                        <span className="block text-sm font-medium" style={{ color: '#2A2A26' }}>
-                          Login HSE
-                        </span>
-                        <span className="block text-xs" style={{ color: '#8A5A52' }}>
-                          Data insiden &amp; kebijakan
-                        </span>
+                    <LogIn size={15} strokeWidth={2} />
+                    Login
+                    <ChevronDown size={14} strokeWidth={2} />
+                  </button>
+                }
+              >
+                <div
+                  className="min-w-[220px] rounded-sm border shadow-sm py-1.5"
+                  style={{ backgroundColor: '#FFFFFF', borderColor: '#E4DFD2' }}
+                >
+                  <Link
+                    to="/login/hse"
+                    className="flex items-start gap-3 px-4 py-2.5 hover:bg-[#F3EEE1] transition-colors"
+                  >
+                    <ShieldCheck
+                      size={17}
+                      strokeWidth={2}
+                      style={{ color: '#6B1414', marginTop: 2 }}
+                    />
+                    <span>
+                      <span className="block text-sm font-medium" style={{ color: '#2A2A26' }}>
+                        Login HSE
                       </span>
-                    </a>
-                    <a
-                      href="/login/cctv"
-                      className="flex items-start gap-3 px-4 py-2.5 hover:bg-[#F3EEE1] transition-colors"
-                    >
-                      <Video size={17} strokeWidth={2} style={{ color: '#6B1414', marginTop: 2 }} />
-                      <span>
-                        <span className="block text-sm font-medium" style={{ color: '#2A2A26' }}>
-                          Login CCTV
-                        </span>
-                        <span className="block text-xs" style={{ color: '#8A5A52' }}>
-                          Monitoring &amp; rekaman kamera
-                        </span>
+                      <span className="block text-xs" style={{ color: '#8A5A52' }}>
+                        Data insiden &amp; kebijakan
                       </span>
-                    </a>
-                  </div>
-                )}
-              </div>
+                    </span>
+                  </Link>
+                  <Link
+                    to="/dashboard/login"
+                    className="flex items-start gap-3 px-4 py-2.5 hover:bg-[#F3EEE1] transition-colors"
+                  >
+                    <Video size={17} strokeWidth={2} style={{ color: '#6B1414', marginTop: 2 }} />
+                    <span>
+                      <span className="block text-sm font-medium" style={{ color: '#2A2A26' }}>
+                        Login CCTV
+                      </span>
+                      <span className="block text-xs" style={{ color: '#8A5A52' }}>
+                        Monitoring &amp; rekaman kamera
+                      </span>
+                    </span>
+                  </Link>
+                  <Link
+                    to="/login/paramedis"
+                    className="flex items-start gap-3 px-4 py-2.5 hover:bg-[#F3EEE1] transition-colors"
+                  >
+                    <HeartPulse
+                      size={17}
+                      strokeWidth={2}
+                      style={{ color: '#6B1414', marginTop: 2 }}
+                    />
+                    <span>
+                      <span className="block text-sm font-medium" style={{ color: '#2A2A26' }}>
+                        Login Paramedis
+                      </span>
+                      <span className="block text-xs" style={{ color: '#8A5A52' }}>
+                        Layanan medis &amp; kesehatan
+                      </span>
+                    </span>
+                  </Link>
+                </div>
+              </HoverDropdown>
             </div>
 
             {/* Mobile toggle */}
@@ -215,16 +250,23 @@ export default function HseTopbar() {
           </div>
         </div>
 
-        {/* Mobile menu */}
+        {/* Mobile menu — tetap inline (bukan portal), karena mobile menu
+            memang didesain untuk mendorong/berada dalam flow header,
+            bukan floating di atas konten seperti dropdown desktop */}
         {mobileOpen && (
           <div
-            className="lg:hidden border-t"
+            className="lg:hidden border-t max-h-[calc(100vh-6rem)] overflow-y-auto"
             style={{ borderColor: '#E4DFD2', backgroundColor: '#FAF8F3' }}
           >
             <nav className="px-4 py-3 flex flex-col">
               {NAV_LINKS.map((link) => (
                 <div key={link.label}>
-                  <a href={link.href} className="block py-2.5 text-sm" style={{ color: '#2A2A26' }}>
+                  <a
+                    href={link.href}
+                    className="block py-2.5 text-sm"
+                    style={{ color: '#2A2A26' }}
+                    onClick={() => setMobileOpen(false)}
+                  >
                     {link.label}
                   </a>
                   {link.children && (
@@ -235,6 +277,7 @@ export default function HseTopbar() {
                           href={child.href}
                           className="block py-2 text-[13px]"
                           style={{ color: '#6B6B62' }}
+                          onClick={() => setMobileOpen(false)}
                         >
                           {child.label}
                         </a>
@@ -247,6 +290,7 @@ export default function HseTopbar() {
                 href="#kontak"
                 className="mt-2 text-sm font-medium text-center px-4 py-2.5 rounded-sm"
                 style={{ backgroundColor: '#E8A33D', color: '#6B1414' }}
+                onClick={() => setMobileOpen(false)}
               >
                 Hubungi Tim HSE
               </a>
@@ -258,22 +302,33 @@ export default function HseTopbar() {
                 >
                   Login
                 </p>
-                <a
-                  href="/login/hse"
+                <Link
+                  to="/login/hse"
                   className="flex items-center gap-2.5 py-2.5 text-sm font-medium"
                   style={{ color: '#2A2A26' }}
+                  onClick={() => setMobileOpen(false)}
                 >
                   <ShieldCheck size={17} strokeWidth={2} style={{ color: '#6B1414' }} />
                   Login HSE
-                </a>
-                <a
-                  href="/login/cctv"
+                </Link>
+                <Link
+                  to="/dashboard/login"
                   className="flex items-center gap-2.5 py-2.5 text-sm font-medium"
                   style={{ color: '#2A2A26' }}
+                  onClick={() => setMobileOpen(false)}
                 >
                   <Video size={17} strokeWidth={2} style={{ color: '#6B1414' }} />
                   Login CCTV
-                </a>
+                </Link>
+                <Link
+                  to="/login/paramedis"
+                  className="flex items-center gap-2.5 py-2.5 text-sm font-medium"
+                  style={{ color: '#2A2A26' }}
+                  onClick={() => setMobileOpen(false)}
+                >
+                  <HeartPulse size={17} strokeWidth={2} style={{ color: '#6B1414' }} />
+                  Login Paramedis
+                </Link>
               </div>
             </nav>
           </div>

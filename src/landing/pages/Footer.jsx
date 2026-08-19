@@ -13,7 +13,7 @@ import {
 import { FaInstagram, FaFacebook, FaTwitter } from 'react-icons/fa';
 
 const QUICK_LINKS = [
-  { label: 'Tentang Kami', href: '#tentang-kami' },
+  { label: 'Tentang Kami', href: '#tentang' },
   { label: 'Kebijakan HSE', href: '#kebijakan' },
   { label: 'Struktur Organisasi', href: '#struktur-organisasi' },
   { label: 'Tim HSE', href: '#tim-hse' },
@@ -22,6 +22,7 @@ const QUICK_LINKS = [
 ];
 
 const FACILITY_LINKS = [
+  { label: 'Fasilitas HSE', href: '#fasilitas-hse' },
   { label: 'Sistem Monitoring CCTV', href: '#fasilitas-cctv' },
   { label: 'Kesehatan & Paramedis', href: '#fasilitas-kesehatan' },
   { label: 'Proteksi Kebakaran', href: '#fasilitas-kebakaran' },

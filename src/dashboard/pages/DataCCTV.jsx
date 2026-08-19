@@ -184,7 +184,7 @@ export default function CCTVIdRecord() {
           title: 'Sesi Berakhir',
           text: 'Silakan login kembali',
         }).then(() => {
-          window.location.href = '/login';
+          window.location.href = '/dashboard/login';
         });
 
         return;

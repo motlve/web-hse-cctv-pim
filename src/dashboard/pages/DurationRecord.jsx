@@ -230,7 +230,7 @@ export default function DurationRecord() {
       if (err.response?.status === 401) {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
-        window.location.href = '/login';
+        window.location.href = '/dashboard/login';
       }
     }
   };

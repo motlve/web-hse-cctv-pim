@@ -7,6 +7,7 @@ import FacilityHSESection from './pages/HSE.jsx';
 import FacilityCCTVSection from './pages/CCTV.jsx';
 import FacilityFireSection from './pages/FacilityFire.jsx';
 import FacilityHealthSection from './pages/Paramedis.jsx';
+import StatsSection from './pages/Stats.jsx';
 import OrgStructureSection from './pages/Structure.jsx';
 import TeamCarouselSection from './pages/Team.jsx';
 import ContactSection from './pages/Contact.jsx';
@@ -24,6 +25,7 @@ function LandingMain() {
       <FacilityCCTVSection />
       <FacilityFireSection />
       <FacilityHealthSection />
+      <StatsSection />
       <OrgStructureSection />
       <TeamCarouselSection />
       <ContactSection />

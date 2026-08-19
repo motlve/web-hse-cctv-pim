@@ -38,11 +38,16 @@ const SCOPE = [
   },
 ];
 
+// ── UKURAN ABOUT SECTION ──────────────────────────────────────
+// Pakai skala "default" (py-16 sm:py-20 lg:py-24), sama dengan
+// section standar lain (Policy, HSE, Program, dst). Heading, body
+// text, dan card padding mengikuti tabel skala di SectionContainer.
+
 export default function AboutSection() {
   return (
     <section id="tentang" className="w-full" style={{ backgroundColor: '#FAF8F3' }}>
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
-        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-start">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-24">
+        <div className="grid lg:grid-cols-2 gap-10 sm:gap-12 lg:gap-16 items-start">
           {/* Text */}
           <div>
             <span
@@ -54,13 +59,13 @@ export default function AboutSection() {
             </span>
 
             <h2
-              className="mt-4 text-2xl sm:text-3xl font-semibold leading-tight tracking-tight"
+              className="mt-4 sm:mt-6 text-2xl sm:text-3xl lg:text-4xl font-semibold leading-tight tracking-tight"
               style={{ color: '#2A2A26' }}
             >
               Satu pusat perbelanjaan, tanggung jawab keselamatan untuk semua
             </h2>
 
-            <p className="mt-4 text-[15px] leading-relaxed" style={{ color: '#6B6B62' }}>
+            <p className="mt-4 text-sm sm:text-base leading-relaxed" style={{ color: '#6B6B62' }}>
               Pondok Indah Mall adalah kompleks pusat perbelanjaan terintegrasi di Jakarta Selatan,
               terdiri dari PIM 1, PIM 2, PIM 3, PIM 5, dan Street Gallery yang saling terhubung
               melalui skywalk. Divisi HSE (Health, Safety &amp; Environment) bertanggung jawab
@@ -110,11 +115,11 @@ export default function AboutSection() {
           </div>
 
           {/* Scope cards */}
-          <div className="grid sm:grid-cols-2 gap-4">
+          <div className="grid sm:grid-cols-2 gap-4 sm:gap-5">
             {SCOPE.map(({ icon: ScopeIcon, title, desc }) => (
               <div
                 key={title}
-                className="p-5 rounded-sm"
+                className="p-5 sm:p-6 rounded-sm"
                 style={{ backgroundColor: '#FFFFFF', border: '1px solid #E4DFD2' }}
               >
                 <div
