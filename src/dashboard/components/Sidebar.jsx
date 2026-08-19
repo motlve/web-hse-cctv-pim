@@ -215,14 +215,14 @@ export default function Sidebar({ onClose }) {
         {dashboardOpen && (
           <div className="ml-3 pl-3 border-l border-slate-100 space-y-0.5 py-1">
             <SidebarLink
-              to="/id-cctv"
+              to="/dashboard/id-cctv"
               label="ID CCTV"
               icon={<FaVideo size={13} />}
               active={isActive('/id-cctv')}
             />
 
             <SidebarLink
-              to="/petugas"
+              to="/dashboard/petugas"
               label="Petugas CCTV"
               icon={<FaUserTie size={13} />}
               active={isActive('/petugas')}
@@ -230,7 +230,7 @@ export default function Sidebar({ onClose }) {
 
             {canViewUser && (
               <SidebarLink
-                to="/user"
+                to="/dashboard/user"
                 label="User"
                 icon={<FaUserCog size={13} />}
                 active={isActive('/user')}
@@ -238,14 +238,14 @@ export default function Sidebar({ onClose }) {
             )}
 
             <SidebarLink
-              to="/data-lokasi"
+              to="/dashboard/data-lokasi"
               label="Data Lokasi"
               icon={<FaMapMarkedAlt size={13} />}
               active={isActive('/data-lokasi')}
             />
 
             <SidebarLink
-              to="/kategori"
+              to="/dashboard/kategori"
               label="Kategori"
               icon={<FaTags size={13} />}
               active={isActive('/kategori')}
@@ -267,14 +267,14 @@ export default function Sidebar({ onClose }) {
         {formOpen && (
           <div className="ml-3 pl-3 border-l border-slate-100 space-y-0.5 py-1">
             <SidebarLink
-              to="/list-camera-trouble"
+              to="/dashboard/list-camera-trouble"
               label="Gangguan Kamera"
               icon={<FaExclamationTriangle size={13} />}
               active={isActive('/list-camera-trouble')}
             />
 
             <SidebarLink
-              to="/incident-record"
+              to="/dashboard/incident-record"
               label="Catatan Insiden"
               icon={<FaClipboardCheck size={13} />}
               active={isActive('/incident-record')}
@@ -296,21 +296,21 @@ export default function Sidebar({ onClose }) {
             {performanceOpen && (
               <div className="ml-3 pl-3 border-l border-slate-100 space-y-0.5 py-1">
                 <SidebarLink
-                  to="/camera-occupancy"
+                  to="/dashboard/camera-occupancy"
                   label="Okupansi Kamera"
                   icon={<FaCamera size={13} />}
                   active={isActive('/camera-occupancy')}
                 />
 
                 <SidebarLink
-                  to="/recording-duration"
+                  to="/dashboard/recording-duration"
                   label="Durasi Rekaman"
                   icon={<FaClock size={13} />}
                   active={isActive('/recording-duration')}
                 />
 
                 <SidebarLink
-                  to="/service-performance"
+                  to="/dashboard/service-performance"
                   label="Performa Service"
                   icon={<FaCogs size={13} />}
                   active={isActive('/service-performance')}
@@ -319,7 +319,7 @@ export default function Sidebar({ onClose }) {
             )}
 
             <SidebarLink
-              to="/summary-request-camera"
+              to="/dashboard/summary-request-camera"
               label="Request Kamera"
               icon={<FaCameraRetro size={13} />}
               active={isActive('/summary-request-camera')}

@@ -10,26 +10,46 @@
 #
 # Script ini:
 #   1. Stop semua container
-#   2. Hapus image lokal (frontend & backend) — TIDAK menyentuh
+#   2. Hapus image lokal (service yang direbuild) — TIDAK menyentuh
 #      image mysql:8 yang di-pull, dan TIDAK menyentuh volume DB
 #   3. Build ulang total dengan --no-cache
-#   4. Start ulang dengan --force-recreate
+#   4. Start SEMUA service lagi (termasuk yang tidak direbuild,
+#      supaya tidak ketinggalan mati kayak sebelumnya)
 #
 # Cara pakai:
 #   chmod +x rebuild.sh
-#   ./rebuild.sh              -> rebuild semua service (frontend+backend)
-#   ./rebuild.sh frontend     -> rebuild frontend saja
-#   ./rebuild.sh backend      -> rebuild backend saja
-#   ./rebuild.sh all --hard   -> rebuild semua + hapus SEMUA image (termasuk base image)
+#   ./rebuild.sh                      -> rebuild semua service
+#   ./rebuild.sh frontend              -> rebuild frontend saja
+#   ./rebuild.sh backend               -> rebuild backend saja
+#   ./rebuild.sh frontend backend      -> rebuild frontend & backend (BISA lebih dari satu!)
+#   ./rebuild.sh --hard                -> rebuild semua + hapus SEMUA image (termasuk base image)
 # ==========================================================
 
 set -e
 
-TARGET="${1:-all}"
-HARD_FLAG="${2:-}"
+# ---- Parsing argumen ----
+# Kumpulkan semua argumen yang BUKAN "--hard" sebagai daftar service.
+# Kalau tidak ada argumen sama sekali -> rebuild semua service.
+TARGETS=()
+HARD_MODE=false
+
+for arg in "$@"; do
+  if [ "$arg" == "--hard" ]; then
+    HARD_MODE=true
+  else
+    TARGETS+=("$arg")
+  fi
+done
+
+if [ ${#TARGETS[@]} -eq 0 ]; then
+  MODE_LABEL="SEMUA service"
+else
+  MODE_LABEL="${TARGETS[*]}"
+fi
 
 echo "=========================================="
-echo "🎯 Target rebuild : $TARGET"
+echo "🎯 Target rebuild : $MODE_LABEL"
+[ "$HARD_MODE" == true ] && echo "⚠️  Mode HARD aktif"
 echo "=========================================="
 
 echo ""
@@ -38,35 +58,31 @@ docker compose down
 
 echo ""
 echo "🗑  [2/4] Hapus image lama..."
-if [ "$TARGET" == "all" ]; then
-  if [ "$HARD_FLAG" == "--hard" ]; then
-    echo "   -> Mode HARD: hapus semua image lokal termasuk cache layer dasar"
-    docker compose down --rmi all
-    docker builder prune -af
-  else
-    echo "   -> Mode normal: hapus image frontend & backend saja (image mysql:8 tetap dipakai dari cache)"
-    docker compose down --rmi local
-  fi
+if [ "$HARD_MODE" == true ]; then
+  echo "   -> Mode HARD: hapus semua image lokal termasuk cache layer dasar"
+  docker compose down --rmi all
+  docker builder prune -af
+elif [ ${#TARGETS[@]} -eq 0 ]; then
+  echo "   -> Hapus image semua service lokal (mysql:8 tetap dari cache)"
+  docker compose down --rmi local
 else
-  echo "   -> Hapus image service: $TARGET"
-  docker rmi -f "$(docker compose images -q "$TARGET" 2>/dev/null)" 2>/dev/null || true
+  for svc in "${TARGETS[@]}"; do
+    echo "   -> Hapus image service: $svc"
+    docker rmi -f "$(docker compose images -q "$svc" 2>/dev/null)" 2>/dev/null || true
+  done
 fi
 
 echo ""
 echo "🔨 [3/4] Build ulang tanpa cache..."
-if [ "$TARGET" == "all" ]; then
+if [ ${#TARGETS[@]} -eq 0 ]; then
   docker compose build --no-cache
 else
-  docker compose build --no-cache "$TARGET"
+  docker compose build --no-cache "${TARGETS[@]}"
 fi
 
 echo ""
-echo "🚀 [4/4] Start ulang container..."
-if [ "$TARGET" == "all" ]; then
-  docker compose up -d --force-recreate
-else
-  docker compose up -d --force-recreate --no-deps "$TARGET"
-fi
+echo "🚀 [4/4] Start ulang SEMUA container (biar tidak ada yang ketinggalan mati)..."
+docker compose up -d --force-recreate
 
 echo ""
 echo "=========================================="
@@ -76,4 +92,4 @@ docker compose ps
 
 echo ""
 echo "📋 Lihat log realtime dengan:"
-echo "   docker compose logs -f $([ "$TARGET" != "all" ] && echo "$TARGET")"
+echo "   docker compose logs -f"

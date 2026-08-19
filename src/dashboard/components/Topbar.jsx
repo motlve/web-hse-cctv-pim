@@ -43,67 +43,67 @@ export default function Topbar({ onMenuClick, searchTerm, setSearchTerm }) {
   const menuItems = [
     {
       label: 'ID CCTV',
-      path: '/id-cctv',
+      path: '/dashboard/id-cctv',
       icon: <FaVideo />,
     },
 
     {
       label: 'Petugas CCTV',
-      path: '/petugas',
+      path: '/dashboard/petugas',
       icon: <FaUsers />,
     },
 
     {
       label: 'User',
-      path: '/user',
+      path: '/dashboard/user',
       icon: <FaUserCog />,
     },
 
     {
       label: 'Data Lokasi',
-      path: '/data-lokasi',
+      path: '/dashboard/data-lokasi',
       icon: <FaMapMarkerAlt />,
     },
 
     {
       label: 'Kategori',
-      path: '/kategori',
+      path: '/dashboard/kategori',
       icon: <FaClipboardList />,
     },
 
     {
       label: 'Gangguan Kamera',
-      path: '/list-camera-trouble',
+      path: '/dashboard/list-camera-trouble',
       icon: <FaExclamationTriangle />,
     },
 
     {
       label: 'Catatan Insiden',
-      path: '/incident-record',
+      path: '/dashboard/incident-record',
       icon: <FaClipboardList />,
     },
 
     {
       label: 'Okupansi Kamera',
-      path: '/camera-occupancy',
+      path: '/dashboard/camera-occupancy',
       icon: <FaVideo />,
     },
 
     {
       label: 'Durasi Rekaman',
-      path: '/recording-duration',
+      path: '/dashboard/recording-duration',
       icon: <FaClock />,
     },
 
     {
       label: 'Performa Service',
-      path: '/service-performance',
+      path: '/dashboard/service-performance',
       icon: <FaChartBar />,
     },
 
     {
       label: 'Request Kamera',
-      path: '/summary-request-camera',
+      path: '/dashboard/summary-request-camera',
       icon: <FaVideo />,
     },
   ];
