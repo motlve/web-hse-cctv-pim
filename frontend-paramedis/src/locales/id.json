@@ -1,0 +1,27 @@
+{
+  "menu": {
+    "idCctv": "ID CCTV",
+    "officer": "Petugas CCTV",
+    "user": "User",
+    "location": "Data Lokasi",
+    "category": "Kategori",
+    "cameraTrouble": "Camera Trouble",
+    "incident": "Incident Record",
+    "occupancy": "Camera Occupancy",
+    "recording": "Durasi Rekaman",
+    "service": "Service Performance",
+    "request": "Request Camera"
+  },
+  "search": {
+    "placeholder": "Cari menu...",
+    "result": "Hasil Pencarian",
+    "notFound": "Menu tidak ditemukan"
+  },
+  "welcome": {
+    "back": "Selamat Datang Kembali 👋",
+    "new": "Selamat Datang 🚀"
+  },
+  "system": {
+    "online": "Sistem Online"
+  }
+}

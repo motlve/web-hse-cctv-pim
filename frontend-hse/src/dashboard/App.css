@@ -1,0 +1,205 @@
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #61dafbaa);
+}
+
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
+}
+
+.card {
+  padding: 2em;
+}
+
+.read-the-docs {
+  color: #888;
+}
+
+.swiper {
+  width: 100%;
+  padding-top: 20px;
+  padding-bottom: 60px;
+}
+
+.swiper-slide {
+  transition: all 0.4s ease;
+}
+
+.swiper-slide-active {
+  transform: scale(1.03);
+}
+
+.swiper-pagination-bullet {
+  width: 10px;
+  height: 10px;
+}
+
+.swiper-pagination-bullet-active {
+  background: #2563eb;
+}
+
+/* ==============================
+   APPLE CALENDAR STYLE
+============================== */
+
+.flatpickr-calendar {
+  border-radius: 32px !important;
+
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.15) !important;
+
+  border: none !important;
+}
+
+.flatpickr-months {
+  padding: 10px;
+}
+
+.flatpickr-current-month {
+  font-size: 18px !important;
+
+  font-weight: 700;
+}
+
+.flatpickr-day {
+  border-radius: 50% !important;
+
+  transition: 0.25s;
+}
+
+.flatpickr-day:hover {
+  background: #f3f4f6 !important;
+}
+
+/* TODAY */
+
+.apple-today {
+  background: #111827 !important;
+
+  color: white !important;
+
+  font-weight: 700;
+}
+
+/* NATIONAL HOLIDAY */
+
+.national-holiday {
+  color: #ef4444 !important;
+
+  font-weight: 800;
+
+  background: #fee2e2;
+}
+
+.national-holiday:hover {
+  background: #fecaca !important;
+}
+
+.national-holiday {
+  background: #fee2e2 !important;
+
+  color: #dc2626 !important;
+
+  font-weight: 700 !important;
+
+  position: relative;
+}
+
+.apple-today {
+  background: #111827 !important;
+
+  color: white !important;
+
+  border-radius: 50% !important;
+}
+
+.flatpickr-day {
+  position: relative;
+}
+
+/* LIBUR NASIONAL */
+
+.flatpickr-day.holiday-national {
+  background: #fee2e2 !important;
+
+  color: #dc2626 !important;
+
+  font-weight: 800 !important;
+
+  border-radius: 14px !important;
+}
+
+.flatpickr-day.holiday-national::after {
+  content: '';
+
+  position: absolute;
+
+  bottom: 5px;
+
+  left: 50%;
+
+  transform: translateX(-50%);
+
+  width: 6px;
+
+  height: 6px;
+
+  border-radius: 50%;
+
+  background: #dc2626;
+}
+
+.flatpickr-day.holiday-national::before {
+  content: '🇮🇩';
+
+  position: absolute;
+
+  top: -8px;
+
+  right: -5px;
+
+  font-size: 11px;
+}
+
+/* MINGGU */
+
+.flatpickr-day.holiday-sunday {
+  color: #ef4444 !important;
+
+  font-weight: 700;
+}
+
+/* TODAY */
+
+.flatpickr-day.today-monitoring {
+  background: #2563eb !important;
+
+  color: white !important;
+
+  border-radius: 14px !important;
+}

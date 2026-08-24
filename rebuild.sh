@@ -12,7 +12,8 @@
 #   1. Stop semua container
 #   2. Hapus image lokal (service yang direbuild) — TIDAK menyentuh
 #      image mysql:8 yang di-pull, dan TIDAK menyentuh volume DB
-#   3. Build ulang total dengan --no-cache
+#   3. Build ulang total dengan --no-cache (SEQUENTIAL, bukan paralel,
+#      supaya tidak timeout kalau koneksi internet sedang lambat)
 #   4. Start SEMUA service lagi (termasuk yang tidak direbuild,
 #      supaya tidak ketinggalan mati kayak sebelumnya)
 #
@@ -73,11 +74,14 @@ else
 fi
 
 echo ""
-echo "🔨 [3/4] Build ulang tanpa cache..."
+echo "🔨 [3/4] Build ulang tanpa cache (sequential, --parallel 1)..."
+# --parallel 1 dipakai supaya service tidak di-build bersamaan.
+# Ini mencegah 'apt-get update' timeout kalau koneksi internet
+# sedang lambat dan harus berbagi bandwidth antar build paralel.
 if [ ${#TARGETS[@]} -eq 0 ]; then
-  docker compose build --no-cache
+  docker compose build --no-cache --parallel=1
 else
-  docker compose build --no-cache "${TARGETS[@]}"
+  docker compose build --no-cache --parallel=1 "${TARGETS[@]}"
 fi
 
 echo ""

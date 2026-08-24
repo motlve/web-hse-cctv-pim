@@ -1,0 +1,27 @@
+{
+  "menu": {
+    "idCctv": "CCTV ID",
+    "officer": "CCTV Officer",
+    "user": "User",
+    "location": "Location Data",
+    "category": "Category",
+    "cameraTrouble": "Camera Trouble",
+    "incident": "Incident Record",
+    "occupancy": "Camera Occupancy",
+    "recording": "Recording Duration",
+    "service": "Service Performance",
+    "request": "Camera Request"
+  },
+  "search": {
+    "placeholder": "Search menu...",
+    "result": "Search Result",
+    "notFound": "Menu not found"
+  },
+  "welcome": {
+    "back": "Welcome Back 👋",
+    "new": "Welcome 🚀"
+  },
+  "system": {
+    "online": "System Online"
+  }
+}
