@@ -5,7 +5,7 @@ import Swal from 'sweetalert2';
 
 import MonitoringCalendar from '../components/Calander';
 import { FiEdit2, FiTrash2, FiPlus, FiCalendar, FiX } from 'react-icons/fi';
-import { BarChart3, TrendingUp, ClipboardList, X } from 'lucide-react';
+import { BarChart3, TrendingUp, ClipboardList, X, AlertTriangle } from 'lucide-react';
 
 import { Plus, Pencil, PlusCircle, Tag } from 'lucide-react';
 
@@ -249,6 +249,26 @@ export default function DataKategori() {
         rank: index + 1,
       }));
   }, [kategoriList, incidentList, pieColors]);
+
+  // Insiden yang kategorinya sudah dihapus/diganti nama (tidak match ke
+  // kategoriList aktif manapun) dihitung terpisah, bukan diam-diam di-skip
+  // dari ranking di atas — sama seperti fix pola serupa di CategoryComplaint.jsx.
+  const unmatchedCategoryCount = useMemo(() => {
+    const activeCategoryNames = new Set(
+      kategoriList.map((cat) => cat.name || cat.name_category)
+    );
+
+    return incidentList.filter((incident) => {
+      const categoryName = incident.category || incident.Category;
+      return !categoryName || !activeCategoryNames.has(categoryName);
+    }).length;
+  }, [kategoriList, incidentList]);
+
+  // Total yang benar-benar tertaut ke kategori aktif — dipakai sebagai
+  // penyebut persentase per kategori, supaya persentase antar kategori
+  // konsisten dan bisa menjumlah ke 100% (bukan incidentList.length mentah
+  // yang ikut menghitung insiden yang sudah tidak tertaut kategori).
+  const totalMatchedIncidents = categoryStats.reduce((sum, item) => sum + item.total, 0);
 
   const getChartData = useMemo(() => {
     return {
@@ -562,7 +582,7 @@ export default function DataKategori() {
         <div
           className="
       w-full lg:w-3/4
-      h-[450px]
+      h-[380px] sm:h-[420px] lg:h-[450px]
       bg-white/20
       backdrop-blur-2xl
       border border-white/30
@@ -596,6 +616,17 @@ export default function DataKategori() {
               {kategoriList.length} Kategori
             </div>
           </div>
+
+          {unmatchedCategoryCount > 0 && (
+            <div className="mb-4 flex items-start gap-2 rounded-xl bg-amber-50 border border-amber-200 px-4 py-2.5 text-amber-800">
+              <AlertTriangle size={16} strokeWidth={2.2} className="mt-0.5 shrink-0" />
+              <p className="text-xs sm:text-sm leading-snug">
+                <b>{unmatchedCategoryCount}</b> insiden tidak tertaut ke kategori aktif mana pun
+                (kemungkinan kategori sudah dihapus atau diganti nama) dan tidak muncul di ranking
+                kategori di samping.
+              </p>
+            </div>
+          )}
 
           <div
             style={{
@@ -678,7 +709,7 @@ export default function DataKategori() {
         <div
           className="
     w-full lg:w-[320px]
-    h-[450px]
+    h-[380px] sm:h-[420px] lg:h-[450px]
     bg-white/80
     backdrop-blur-xl
     rounded-3xl
@@ -712,7 +743,9 @@ export default function DataKategori() {
 
                         total: item.total,
 
-                        percentage: ((item.total / incidentList.length) * 100).toFixed(1),
+                        percentage: totalMatchedIncidents
+                          ? ((item.total / totalMatchedIncidents) * 100).toFixed(1)
+                          : '0',
 
                         rank: index + 1,
 
@@ -845,7 +878,7 @@ export default function DataKategori() {
       flex
       items-center
       justify-center
-      p-4
+      p-2 sm:p-4 md:p-6
     "
             onClick={() => setSelectedCategory(null)}
           >
@@ -853,10 +886,12 @@ export default function DataKategori() {
               className="
         w-full
         max-w-xl
+        max-h-[95vh]
+        overflow-y-auto
         bg-white
-        rounded-3xl
+        rounded-2xl md:rounded-3xl
         shadow-2xl
-        p-8
+        p-4 sm:p-6 md:p-8
         animate-in
         fade-in
         zoom-in
@@ -936,7 +971,7 @@ export default function DataKategori() {
 
                   <h3
                     className="
-            text-4xl
+            text-2xl sm:text-3xl md:text-4xl
             font-bold
             text-blue-600
           "
@@ -956,7 +991,7 @@ export default function DataKategori() {
 
                   <h3
                     className="
-            text-4xl
+            text-2xl sm:text-3xl md:text-4xl
             font-bold
             text-red-600
           "
@@ -976,7 +1011,7 @@ export default function DataKategori() {
 
                   <h3
                     className="
-            text-4xl
+            text-2xl sm:text-3xl md:text-4xl
             font-bold
             text-green-600
           "
@@ -1286,7 +1321,7 @@ export default function DataKategori() {
       items-center
       justify-center
       z-[999]
-      p-6
+      p-2 sm:p-4 md:p-6
     "
             onClick={() => {
               setShowForm(false);
@@ -1300,11 +1335,13 @@ export default function DataKategori() {
               className="
         bg-white/90
         backdrop-blur-3xl
-        rounded-[40px]
+        rounded-2xl md:rounded-[40px]
         shadow-[0_40px_100px_rgba(0,0,0,.2)]
         w-full
         max-w-xl
-        p-10
+        max-h-[95vh]
+        overflow-y-auto
+        p-4 sm:p-6 md:p-10
       "
             >
               {/* HEADER */}
@@ -1312,8 +1349,11 @@ export default function DataKategori() {
               <div
                 className="
           flex
+          flex-col
+          sm:flex-row
           justify-between
           items-start
+          gap-4
           mb-8
         "
               >
@@ -1335,7 +1375,8 @@ export default function DataKategori() {
               flex
               items-center
               gap-2
-              text-3xl
+              text-2xl
+              md:text-3xl
               font-bold
               text-gray-800
               mt-3
@@ -1388,6 +1429,7 @@ export default function DataKategori() {
             hover:bg-red-500
             hover:text-white
             duration-300
+            shrink-0
           "
                 >
                   <X size={22} strokeWidth={2.5} />
@@ -1438,6 +1480,8 @@ export default function DataKategori() {
                 <div
                   className="
             flex
+            flex-col-reverse
+            sm:flex-row
             justify-end
             gap-3
             mt-8
@@ -1457,6 +1501,8 @@ export default function DataKategori() {
                       setEditId(null);
                     }}
                     className="
+              w-full
+              sm:w-auto
               px-6
               py-3
               rounded-2xl
@@ -1471,6 +1517,8 @@ export default function DataKategori() {
                   <button
                     type="submit"
                     className="
+              w-full
+              sm:w-auto
               px-8
               py-3
               rounded-2xl

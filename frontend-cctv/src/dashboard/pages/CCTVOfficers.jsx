@@ -74,6 +74,10 @@ export default function CCTVOfficers() {
 
   const [officerList, setOfficerList] = useState([]);
   const [officerIncidentSummary, setOfficerIncidentSummary] = useState([]);
+  // Insiden pada tahun terpilih yang petugasnya bukan berstatus Aktif (Mutasi/
+  // Resign/dihapus) — dihitung terpisah, bukan diam-diam di-skip dari
+  // "Analisis Performa Petugas" seperti sebelumnya.
+  const [unmatchedOfficerIncidentCount, setUnmatchedOfficerIncidentCount] = useState(0);
 
   const [showOfficerAnalysis, setShowOfficerAnalysis] = useState(false);
   const [showOfficerStatusAnalysis, setShowOfficerStatusAnalysis] = useState(false);
@@ -611,9 +615,14 @@ export default function CCTVOfficers() {
       // HITUNG INCIDENT PER OFFICER
       // ============================
       const officerCounts = {};
+      let unmatchedCount = 0;
+
       filteredIncidents.forEach((incident) => {
         const officerName = incident.nameOfficer;
-        if (!officerName || !activeOfficerNames.includes(officerName)) return;
+        if (!officerName || !activeOfficerNames.includes(officerName)) {
+          unmatchedCount++;
+          return;
+        }
         officerCounts[officerName] = (officerCounts[officerName] || 0) + 1;
       });
 
@@ -622,6 +631,7 @@ export default function CCTVOfficers() {
         .sort((a, b) => b.incidentCount - a.incidentCount);
 
       setOfficerIncidentSummary(summaryArray);
+      setUnmatchedOfficerIncidentCount(unmatchedCount);
       setSelectedYear(targetYear); // sinkronkan dropdown dengan tahun yang dipakai
     } catch (error) {
       console.error('Gagal fetch summary officer:', error);
@@ -1074,6 +1084,17 @@ SLIDE 1 ANALISIS PERFORMA PETUGAS
                 </div>
               </div>
 
+              {unmatchedOfficerIncidentCount > 0 && (
+                <div className="mb-6 flex items-start gap-2 rounded-xl bg-amber-50 border border-amber-200 px-4 py-2.5 text-amber-800">
+                  <FiAlertCircle size={16} className="mt-0.5 shrink-0" />
+                  <p className="text-xs sm:text-sm leading-snug">
+                    <b>{unmatchedOfficerIncidentCount}</b> insiden pada tahun ini tercatat atas
+                    nama petugas yang statusnya bukan Aktif (Mutasi/Resign) dan tidak muncul di
+                    "Total Insiden"/ranking di atas.
+                  </p>
+                </div>
+              )}
+
               {/* CHART */}
               <div className="rounded-xl border border-slate-100 p-3 md:p-6 mb-6">
                 <div className="h-[260px] sm:h-[300px] md:h-[350px]">
@@ -1324,6 +1345,17 @@ SLIDE 2 STATUS PETUGAS
                   </div>
                 </div>
               </div>
+
+              {unmatchedOfficerIncidentCount > 0 && (
+                <div className="mb-6 flex items-start gap-2 rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 text-amber-800">
+                  <FiAlertCircle size={16} className="mt-0.5 shrink-0" />
+                  <p className="text-xs sm:text-sm leading-snug">
+                    <b>{unmatchedOfficerIncidentCount}</b> insiden pada tahun ini tercatat atas
+                    nama petugas yang statusnya bukan Aktif (Mutasi/Resign) dan tidak muncul di
+                    "Total Insiden"/ranking di atas.
+                  </p>
+                </div>
+              )}
 
               {/* CHART */}
               <div className="rounded-xl border border-slate-100 p-4 md:p-7 mb-6">

@@ -1299,25 +1299,34 @@ export default function DurationRecord() {
 
     let totalAnalogRecorder = 0;
 
+    // Opsi dropdown "Jenis Kamera" punya 3 nilai (IP Camera, Analog Camera,
+    // Mixed), tapi sebelumnya cuma 2 bucket di sini (ip/analog) — record
+    // "Mixed" hilang diam-diam dari totalRecorder & ranking. Ditambah bucket
+    // ketiga supaya exhaustive terhadap 3 opsi yang ada di form.
+    let totalMixedRecorder = 0;
+
     durationRecordList.forEach((item) => {
       const jenis = item.jenis_kamera?.toLowerCase();
 
-      if (jenis?.includes('ip')) {
+      if (jenis?.includes('mixed')) {
+        totalMixedRecorder++;
+      } else if (jenis?.includes('ip')) {
         totalIPRecorder++;
-      }
-
-      if (jenis?.includes('analog')) {
+      } else if (jenis?.includes('analog')) {
         totalAnalogRecorder++;
       }
     });
 
-    const totalRecorder = totalIPRecorder + totalAnalogRecorder;
+    const totalRecorder = totalIPRecorder + totalAnalogRecorder + totalMixedRecorder;
 
     const ipPercentage =
       totalRecorder === 0 ? 0 : Number(((totalIPRecorder / totalRecorder) * 100).toFixed(1));
 
     const analogPercentage =
       totalRecorder === 0 ? 0 : Number(((totalAnalogRecorder / totalRecorder) * 100).toFixed(1));
+
+    const mixedPercentage =
+      totalRecorder === 0 ? 0 : Number(((totalMixedRecorder / totalRecorder) * 100).toFixed(1));
 
     // =====================================
     // Ranking Device Type
@@ -1338,6 +1347,14 @@ export default function DurationRecord() {
         total: totalAnalogRecorder,
 
         percentage: analogPercentage,
+      },
+
+      {
+        type: 'Mixed Camera Recorder',
+
+        total: totalMixedRecorder,
+
+        percentage: mixedPercentage,
       },
     ].sort((a, b) => b.total - a.total);
 
@@ -1361,9 +1378,13 @@ export default function DurationRecord() {
 
       totalAnalogRecorder,
 
+      totalMixedRecorder,
+
       ipPercentage,
 
       analogPercentage,
+
+      mixedPercentage,
 
       ranking,
 
@@ -1379,6 +1400,8 @@ export default function DurationRecord() {
         `Konfigurasi IP Camera digunakan pada ${totalIPRecorder} DVR/NVR (${ipPercentage}%).`,
 
         `Konfigurasi Analog Camera digunakan pada ${totalAnalogRecorder} DVR/NVR (${analogPercentage}%).`,
+
+        `Konfigurasi Mixed digunakan pada ${totalMixedRecorder} DVR/NVR (${mixedPercentage}%).`,
 
         highest.type !== '-'
           ? `${highest.type} merupakan konfigurasi terbanyak dengan ${highest.total} unit.`
@@ -1409,7 +1432,7 @@ export default function DurationRecord() {
     const analysis = getCameraTypeAnalysis();
 
     return {
-      labels: ['IP Camera', 'Analog Camera'],
+      labels: ['IP Camera', 'Analog Camera', 'Mixed'],
 
       datasets: [
         // ==========================
@@ -1419,9 +1442,9 @@ export default function DurationRecord() {
         {
           label: 'Current Camera Distribution',
 
-          data: [analysis.totalIPRecorder, analysis.totalAnalogRecorder],
+          data: [analysis.totalIPRecorder, analysis.totalAnalogRecorder, analysis.totalMixedRecorder],
 
-          backgroundColor: ['#06b6d4', '#f97316'],
+          backgroundColor: ['#06b6d4', '#f97316', '#a855f7'],
 
           borderColor: '#ffffff',
 
@@ -1439,9 +1462,9 @@ export default function DurationRecord() {
         {
           label: 'Percentage',
 
-          data: [analysis.ipPercentage, analysis.analogPercentage],
+          data: [analysis.ipPercentage, analysis.analogPercentage, analysis.mixedPercentage],
 
-          backgroundColor: ['#38bdf8', '#fb923c'],
+          backgroundColor: ['#38bdf8', '#fb923c', '#c084fc'],
 
           borderColor: '#ffffff',
 
@@ -2364,7 +2387,7 @@ export default function DurationRecord() {
 
         {showRecordingDurationAnalysis && (
           <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-200"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-2 sm:p-4 md:p-6 animate-in fade-in duration-200"
             onClick={() => setShowRecordingDurationAnalysis(false)}
           >
             <div
@@ -2590,7 +2613,7 @@ export default function DurationRecord() {
 
         {showStorageCapacityAnalysis && (
           <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-200"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-2 sm:p-4 md:p-6 animate-in fade-in duration-200"
             onClick={() => setShowStorageCapacityAnalysis(false)}
           >
             <div
@@ -2807,7 +2830,7 @@ export default function DurationRecord() {
 
         {showCameraTypeDistribution && (
           <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-200"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-2 sm:p-4 md:p-6 animate-in fade-in duration-200"
             onClick={() => setShowCameraTypeDistribution(false)}
           >
             <div
@@ -2979,7 +3002,7 @@ export default function DurationRecord() {
 
         {showStorageEfficiency && (
           <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-200"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-2 sm:p-4 md:p-6 animate-in fade-in duration-200"
             onClick={() => setShowStorageEfficiency(false)}
           >
             <div
@@ -3420,7 +3443,7 @@ flex
 items-center
 justify-center
 z-[999]
-p-6
+p-2 sm:p-4 md:p-6
 overflow-y-auto
 "
             onClick={() => {
@@ -3433,13 +3456,13 @@ overflow-y-auto
               className="
 bg-white/90
 backdrop-blur-3xl
-rounded-[40px]
+rounded-2xl md:rounded-[40px]
 shadow-[0_40px_100px_rgba(0,0,0,.2)]
 w-full
 max-w-4xl
-max-h-[90vh]
+max-h-[95vh] md:max-h-[90vh]
 overflow-y-auto
-p-10
+p-4 sm:p-6 md:p-10
 "
             >
               {/* HEADER */}
@@ -3447,8 +3470,11 @@ p-10
               <div
                 className="
 flex
+flex-col
+sm:flex-row
 justify-between
 items-start
+gap-4
 mb-8
 "
               >
@@ -3467,7 +3493,8 @@ font-semibold
 
                   <h2
                     className="
-text-3xl
+text-2xl
+md:text-3xl
 font-bold
 text-gray-800
 mt-3
@@ -3497,6 +3524,7 @@ hover:bg-red-500
 hover:text-white
 text-2xl
 duration-300
+shrink-0
 "
                 >
                   ×
@@ -3732,6 +3760,8 @@ outline-none
                   className="
 md:col-span-2
 flex
+flex-col-reverse
+sm:flex-row
 justify-end
 gap-3
 mt-6
@@ -3741,6 +3771,8 @@ mt-6
                     type="button"
                     onClick={() => setShowForm(false)}
                     className="
+w-full
+sm:w-auto
 px-6
 py-3
 rounded-2xl
@@ -3755,6 +3787,8 @@ duration-300
                   <button
                     type="submit"
                     className="
+w-full
+sm:w-auto
 px-8
 py-3
 rounded-2xl
