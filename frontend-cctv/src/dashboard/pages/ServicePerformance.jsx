@@ -1086,7 +1086,11 @@ export default function ServicePerformanceCam() {
     return {
       totalArea: ranking.length,
 
-      totalIncident: servicePerformanceList.length,
+      // Dihitung dari ranking (yang dibangun dari filteredServicePerformance),
+      // bukan servicePerformanceList.length mentah — supaya KPI "Total Gangguan"
+      // di panel ini selalu konsisten dengan tabel ranking area yang sama-sama
+      // mengikuti filter tahun/search yang aktif.
+      totalIncident: ranking.reduce((sum, item) => sum + item.totalIncident, 0),
 
       totalCameraAffected: ranking.reduce((sum, item) => sum + item.totalCameraAffected, 0),
 
@@ -1247,7 +1251,11 @@ export default function ServicePerformanceCam() {
     // RECOVERY
     // =========================
 
-    const recovered = filteredServicePerformance.filter(
+    // Dihitung dari servicePerformanceList (sama dengan `total` di atas), bukan
+    // filteredServicePerformance yang sudah difilter tahun/search — supaya
+    // recoveryRate = recovered / total tidak mencampur dua scope data yang
+    // berbeda (numerator per-tahun terpilih, denominator semua tahun).
+    const recovered = servicePerformanceList.filter(
       (item) =>
         item.tanggal_berfungsi_kembali && item.tanggal_berfungsi_kembali !== '0001-01-01T00:00:00Z'
     ).length;
@@ -1839,7 +1847,7 @@ export default function ServicePerformanceCam() {
 
         {showServiceSummary && (
           <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-200"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-2 sm:p-4 md:p-6 animate-in fade-in duration-200"
             onClick={() => setShowServiceSummary(false)}
           >
             <div
@@ -2000,7 +2008,7 @@ export default function ServicePerformanceCam() {
 
         {showRepairDurationAnalysis && (
           <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-200"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-2 sm:p-4 md:p-6 animate-in fade-in duration-200"
             onClick={() => setShowRepairDurationAnalysis(false)}
           >
             <div
@@ -2207,7 +2215,7 @@ export default function ServicePerformanceCam() {
 
         {showRepairDurationAnalysis && (
           <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-200"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-2 sm:p-4 md:p-6 animate-in fade-in duration-200"
             onClick={() => setShowRepairDurationAnalysis(false)}
           >
             <div
@@ -2414,7 +2422,7 @@ export default function ServicePerformanceCam() {
 
         {showAreaPerformanceAnalysis && (
           <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-200"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-2 sm:p-4 md:p-6 animate-in fade-in duration-200"
             onClick={() => setShowAreaPerformanceAnalysis(false)}
           >
             <div
@@ -2615,7 +2623,7 @@ export default function ServicePerformanceCam() {
 
         {showMaintenanceHistory && (
           <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-200"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-2 sm:p-4 md:p-6 animate-in fade-in duration-200"
             onClick={() => setShowMaintenanceHistory(false)}
           >
             <div
@@ -3039,7 +3047,7 @@ export default function ServicePerformanceCam() {
   items-center
   justify-center
   z-[999]
-  p-6
+  p-2 sm:p-4 md:p-6
   overflow-y-auto
   "
             onClick={() => setShowForm(false)}
@@ -3049,13 +3057,13 @@ export default function ServicePerformanceCam() {
               className="
   bg-white/90
   backdrop-blur-3xl
-  rounded-[40px]
+  rounded-2xl md:rounded-[40px]
   shadow-[0_40px_100px_rgba(0,0,0,.2)]
   w-full
   max-w-5xl
-  max-h-[90vh]
+  max-h-[95vh] md:max-h-[90vh]
   overflow-y-auto
-  p-10
+  p-4 sm:p-6 md:p-10
   "
             >
               {/* HEADER */}
@@ -3063,8 +3071,11 @@ export default function ServicePerformanceCam() {
               <div
                 className="
   flex
+  flex-col
+  sm:flex-row
   justify-between
   items-start
+  gap-4
   mb-8
   "
               >
@@ -3083,7 +3094,8 @@ export default function ServicePerformanceCam() {
 
                   <h2
                     className="
-  text-3xl
+  text-2xl
+  md:text-3xl
   font-bold
   text-gray-800
   mt-3
@@ -3124,6 +3136,7 @@ export default function ServicePerformanceCam() {
   hover:text-white
   text-2xl
   duration-300
+  shrink-0
   flex
   items-center
   justify-center
@@ -3402,6 +3415,8 @@ export default function ServicePerformanceCam() {
                   className="
   md:col-span-2
   flex
+  flex-col-reverse
+  sm:flex-row
   justify-end
   gap-3
   mt-6
@@ -3411,6 +3426,8 @@ export default function ServicePerformanceCam() {
                     type="button"
                     onClick={() => setShowForm(false)}
                     className="
+  w-full
+  sm:w-auto
   px-6
   py-3
   rounded-2xl
@@ -3425,6 +3442,8 @@ export default function ServicePerformanceCam() {
                   <button
                     type="submit"
                     className="
+  w-full
+  sm:w-auto
   px-8
   py-3
   rounded-2xl

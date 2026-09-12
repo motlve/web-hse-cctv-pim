@@ -2064,14 +2064,18 @@ export default function ListTroubleCamera() {
   // ERROR VS DURATION COMPARISON
   // =====================================
 
-  const getCameraErrorImpactAnalysis = () => {
+  // Terima `data` seperti fungsi analisis lain di halaman ini (getCameraRecoveryAnalysis,
+  // getTroubleAreaAnalysis, dst) — sebelumnya fungsi ini tidak punya parameter dan selalu
+  // memakai troubleList mentah, jadi diam-diam tidak ikut filter tahun/search walau
+  // dipanggil dengan filteredTroubleList.
+  const getCameraErrorImpactAnalysis = (data = []) => {
     const cameraMap = {};
 
     // =====================================
     // COLLECT ERROR DATA
     // =====================================
 
-    troubleList.forEach((item) => {
+    data.forEach((item) => {
       const camera = item.id_camera || item.idCamera || item.camera || 'UNKNOWN';
 
       const area = item.lokasi || item.lokasi_detail || item.lokasiDetail || item.area || 'UNKNOWN';
@@ -2380,8 +2384,8 @@ export default function ListTroubleCamera() {
         SESSION EXPIRED MODAL
     =========================== */}
       {showSessionExpired && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex justify-center items-center z-[9999]">
-          <div className="bg-white rounded-3xl shadow-2xl w-[480px] overflow-hidden">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex justify-center items-center z-[9999] p-4">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-[480px] overflow-hidden">
             <div className="bg-red-600 text-white py-6 flex justify-center">
               <div className="w-20 h-20 rounded-full bg-white/20 flex items-center justify-center text-5xl">
                 🔒
@@ -3590,7 +3594,7 @@ export default function ListTroubleCamera() {
       justify-center
       items-center
       z-50
-      p-6
+      p-2 sm:p-4 md:p-6
     "
               onClick={() => setShowError(false)}
             >
@@ -3598,11 +3602,11 @@ export default function ListTroubleCamera() {
                 className="
         relative
         bg-white
-        rounded-[40px]
-        w-[1100px]
-        max-h-[92vh]
+        rounded-2xl md:rounded-[40px]
+        w-full max-w-[1100px]
+        max-h-[95vh] md:max-h-[92vh]
         overflow-y-auto
-        p-10
+        p-4 sm:p-6 md:p-10
         shadow-2xl
       "
                 onClick={(e) => e.stopPropagation()}
@@ -3635,13 +3639,13 @@ export default function ListTroubleCamera() {
                 </button>
 
                 {/* HEADER */}
-                <div className="flex justify-between items-start mb-10 pr-16">
+                <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-10 pr-12 sm:pr-16">
                   <div>
                     <p className="text-xs tracking-[5px] uppercase font-black text-red-600">
                       CCTV RISK CENTER
                     </p>
 
-                    <h2 className="text-4xl font-black text-gray-900 mt-3 flex items-center gap-3">
+                    <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-gray-900 mt-3 flex items-center gap-3">
                       <FiAlertTriangle className="text-red-600" size={40} />
                       Analisa Intelijen Gangguan CCTV
                     </h2>
@@ -3658,7 +3662,7 @@ export default function ListTroubleCamera() {
                 </div>
 
                 {/* KPI */}
-                <div className="grid grid-cols-4 gap-5">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-5">
                   {/* TOTAL ERROR */}
                   <div className="rounded-3xl bg-red-50 border p-6">
                     <p className="text-red-700 font-bold flex gap-2 items-center">
@@ -3666,7 +3670,7 @@ export default function ListTroubleCamera() {
                       Total Gangguan
                     </p>
 
-                    <h1 className="text-5xl font-black text-red-600 mt-3">
+                    <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-red-600 mt-3">
                       {errorAnalysis?.totalError || 0}
                     </h1>
 
@@ -3680,7 +3684,7 @@ export default function ListTroubleCamera() {
                       Kamera Paling Bermasalah
                     </p>
 
-                    <h1 className="text-3xl font-black text-orange-600 mt-3">
+                    <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-orange-600 mt-3">
                       {errorAnalysis?.highestCamera?.camera || '-'}
                     </h1>
 
@@ -3696,7 +3700,7 @@ export default function ListTroubleCamera() {
                       Area Risiko Tertinggi
                     </p>
 
-                    <h1 className="text-3xl font-black text-yellow-600 mt-3">
+                    <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-yellow-600 mt-3">
                       {errorAnalysis?.highestArea?.area || '-'}
                     </h1>
 
@@ -3727,7 +3731,7 @@ export default function ListTroubleCamera() {
                       Status Risiko
                     </p>
 
-                    <h1 className="text-3xl font-black mt-3">
+                    <h1 className="text-xl sm:text-2xl md:text-3xl font-black mt-3">
                       {errorAnalysis?.riskLevel === 'CRITICAL'
                         ? 'KRITIS'
                         : errorAnalysis?.riskLevel === 'HIGH'
@@ -3776,7 +3780,7 @@ export default function ListTroubleCamera() {
                 </div>
 
                 {/* INSIGHT */}
-                <div className="grid grid-cols-2 gap-6 mt-8">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-8">
                   <div className="bg-blue-50 border rounded-3xl p-6">
                     <h3 className="text-xl font-black mb-5 flex gap-2 items-center">
                       <FiInfo />
@@ -4720,7 +4724,7 @@ flex
 items-center
 justify-center
 z-[999]
-p-6
+p-2 sm:p-4 md:p-6
 "
               onClick={() => setShowForm(false)}
             >
@@ -4729,13 +4733,13 @@ p-6
                 className="
 bg-white/90
 backdrop-blur-3xl
-rounded-[40px]
+rounded-2xl md:rounded-[40px]
 shadow-[0_40px_100px_rgba(0,0,0,.2)]
 w-full
 max-w-5xl
-max-h-[90vh]
+max-h-[95vh] md:max-h-[90vh]
 overflow-y-auto
-p-10
+p-4 sm:p-6 md:p-10
 "
               >
                 {/* HEADER */}
@@ -4743,8 +4747,11 @@ p-10
                 <div
                   className="
 flex
+flex-col
+sm:flex-row
 justify-between
 items-start
+gap-4
 mb-6
 "
                 >
@@ -4763,7 +4770,8 @@ font-black
 
                     <h2
                       className="
-text-3xl
+text-2xl
+md:text-3xl
 font-black
 text-gray-800
 mt-3
@@ -4813,6 +4821,7 @@ flex
 items-center
 justify-center
 transition
+shrink-0
 "
                   >
                     <FiX size={24} />
@@ -5252,6 +5261,8 @@ cursor-pointer
                     className="
 md:col-span-2
 flex
+flex-col-reverse
+sm:flex-row
 justify-end
 gap-3
 mt-6
@@ -5265,6 +5276,8 @@ mt-6
                         setSelectedCameras([]);
                       }}
                       className="
+w-full
+sm:w-auto
 px-6
 py-3
 rounded-2xl
@@ -5272,6 +5285,7 @@ bg-gray-100
 hover:bg-gray-200
 flex
 items-center
+justify-center
 gap-2
 transition
 "
@@ -5284,6 +5298,8 @@ transition
                       type="submit"
                       disabled={isBulkMode && selectedCameras.length === 0}
                       className="
+w-full
+sm:w-auto
 px-8
 py-3
 rounded-2xl
@@ -5298,6 +5314,7 @@ hover:scale-105
 transition
 flex
 items-center
+justify-center
 gap-2
 disabled:opacity-50
 disabled:cursor-not-allowed
@@ -5621,7 +5638,7 @@ ${getStatusHighlight(item?.status)}
       {/* Keterangan Popup */}
       {showKeteranganPopup && (
         <div
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999]"
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999] p-4"
           onClick={() => setShowKeteranganPopup(false)}
         >
           <div
@@ -5638,10 +5655,10 @@ ${getStatusHighlight(item?.status)}
               className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
 
-            <div className="flex justify-end mt-4 space-x-2">
+            <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 mt-4">
               <button
                 onClick={() => setShowKeteranganPopup(false)}
-                className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-md"
+                className="w-full sm:w-auto bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-md"
               >
                 Batal
               </button>
@@ -5650,7 +5667,7 @@ ${getStatusHighlight(item?.status)}
                   setFormData((prevData) => ({ ...prevData, keterangan: tempKeterangan }));
                   setShowKeteranganPopup(false);
                 }}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md"
+                className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md"
               >
                 Simpan
               </button>
