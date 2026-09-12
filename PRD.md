@@ -1,6 +1,6 @@
 # PRD — Sistem HSE, CCTV & Paramedis Monitoring
 
-Pondok Indah Mall — **Versi Draft 1.2** — Diperbarui 12 September 2026 — HSE
+Pondok Indah Mall — **Versi Draft 1.3** — Diperbarui 12 September 2026 — HSE
 
 > **Catatan revisi (1.0 → 1.1):** Draft ini disusun ulang dari PRD Draft 1.0 (PDF, dibuat 11 September 2026),
 > digabung dengan status teknis aktual yang ditemukan lewat audit codebase (didokumentasikan di `CLAUDE.md`
@@ -14,6 +14,8 @@ Pondok Indah Mall — **Versi Draft 1.2** — Diperbarui 12 September 2026 — H
 > - **Modul Komplain GSL didokumentasikan untuk pertama kali.** Modul ini ternyata sudah live dan full CRUD (backend `backend-cctv` + frontend `frontend-cctv`) tapi belum pernah tercatat di draft sebelumnya — ditandai **⚠️ Baru, dari audit kode** di Bagian 4, 5, dan 7.
 > - **Redesign chart** di Data Lokasi (donut + total di tengah + custom legend breakdown per lokasi) dan Komplain GSL (donut status penanganan + bar chart per kategori) — detail teknis di Bagian 6.
 > - **Satu bug data-integrity ditemukan (belum diperbaiki)** di Data Lokasi: total insiden di dashboard bisa tidak match dengan breakdown per lokasi karena ada `IncidentRecord` lama yang field `location`-nya tidak match ke `LocationModels` aktif mana pun. Redesign chart yang masuk sejauh ini murni visual — perhitungan total dan penanganan data tak-tertaut belum disentuh. Detail di Bagian 8, dan ditambahkan sebagai item kerja terbuka.
+
+> **Catatan revisi (1.2 → 1.3):** Bug data-integrity di Data Lokasi yang ditandai "belum diperbaiki" di atas **sudah diperbaiki** di `DataLocation.jsx`: total insiden sekarang dihitung dari data yang benar-benar tampil di breakdown per lokasi (bukan `incidentList.length` mentah), dan dashboard menampilkan warning jumlah insiden yang tidak tertaut ke lokasi aktif alih-alih menyembunyikannya diam-diam. Perbaikan bersifat kode saja — tidak mengubah data model, jadi tidak ada perubahan skema. Detail di Bagian 8.
 
 ---
 
@@ -113,6 +115,7 @@ Bertugas shift di lapangan — memonitor kondisi fasilitas & CCTV, menangani ins
 - Utilitas alert terstandardisasi (appleSwal) — frontend yang sudah aktif.
 - Backend Go + MySQL untuk modul CCTV (`backend-cctv`), berjalan via Docker Compose di belakang nginx, endpoint di-proxy lewat `/api/`.
 - **Modul Komplain GSL** (CRUD komplain, kategori komplain, data petugas GSL) — bagian dari `backend-cctv`/`frontend-cctv`, sudah live di stack yang sama dengan modul CCTV.
+- **⚠️ Baru, dari audit kode (diperbaiki di Draft 1.3):** Akurasi total insiden di Data Lokasi — total sekarang dihitung dari data yang benar-benar tampil di breakdown per lokasi, dan dashboard menampilkan warning jumlah insiden yang tidak tertaut ke lokasi aktif. Lihat Bagian 8.
 
 > **⚠️ Baru, dari audit kode:** item Komplain GSL di atas baru muncul sekarang di PRD padahal sudah live di kode. Penyebabnya: modul ini dibangun setelah Draft 1.0/1.1 disusun dan tidak ada catatan riwayat pekerjaan yang menyebutkannya secara eksplisit sebelumnya, jadi tidak tertangkap saat audit codebase yang menghasilkan Draft 1.1. Statusnya dikonfirmasi lewat pengecekan langsung: model (`ComplaintRecord`, `ComplaintCategory`, `GSLOfficerModel`), controller, dan router (`RegisterComplaintRoutes`, `RegisterComplaintCategoryRoutes`, `RegisterGSLOfficerRoutes`) ada di `backend-cctv` dan didaftarkan di `SetupRouters()` — service yang sama yang tercantum di `docker-compose.yml` (bukan clone `backend-hse`/`backend-paramedis` yang belum live), dan sidebar `frontend-cctv` menunjuk ke halaman CRUD sungguhan, bukan `ComingSoon`.
 
@@ -141,7 +144,6 @@ Bertugas shift di lapangan — memonitor kondisi fasilitas & CCTV, menangani ins
 - Backend domain-specific untuk HSE dan Paramedis — **item baru**, ditambahkan berdasarkan temuan status teknis di atas. Mencakup: desain model data sesuai domain (bukan reuse model CCTV), lalu pendaftaran service ke `docker-compose.yml` dan `nginx.conf` supaya benar-benar bisa diakses.
 - Input insiden dari lapangan lewat form mobile-friendly — modul HSE, scope belum dikonfirmasi.
 - Pencatatan kasus medis — modul Paramedis, scope belum dikonfirmasi.
-- **⚠️ Baru, dari audit kode:** Perbaikan akurasi total insiden di Data Lokasi (hitung total dari data yang benar-benar tampil di breakdown, plus tampilkan warning jumlah insiden yang tidak tertaut ke lokasi aktif) — ditemukan sebagai bug, redesign chart yang sudah masuk baru menyentuh sisi visual, belum ini. Lihat Bagian 8.
 - **⚠️ Baru, dari audit kode:** Keseragaman styling chart Komplain GSL dengan Data Lokasi (donut total di tengah, bar gradient + value-label) — kalau ini memang jadi target, saat ini implementasinya masih pakai Chart.js polos (legend bawaan, warna solid). Lihat Bagian 6.
 
 ### Nanti / Backlog
@@ -239,7 +241,7 @@ Bertugas shift di lapangan — memonitor kondisi fasilitas & CCTV, menangani ins
 - Filter tahun dinamis dengan data kosong — belum jelas bagaimana UI menangani kondisi saat tidak ada data sama sekali untuk tahun tertentu.
 - Konsistensi desain antar 4 frontend terpisah (`frontend-cctv`, `frontend-hse`, `frontend-paramedis`, `company-profile`) — risiko drift karena masing-masing adalah project npm independen (bukan monorepo dengan shared component library), sekalipun struktur foldernya identik hasil clone dari `frontend-cctv`.
 - Tidak ada test runner (Jest/Vitest/Go test) di seluruh repo saat ini — perubahan pada model/route yang di-share antar tiga backend clone berisiko regresi diam-diam kalau hanya di-cek manual.
-- **⚠️ Baru, dari audit kode:** Total insiden di dashboard Data Lokasi (`DataLocation.jsx`) bisa tidak match dengan breakdown per lokasi. Penyebabnya: `getChartData()` hanya menghitung insiden yang field `location`-nya cocok persis dengan salah satu `LocationModels` yang masih aktif — `IncidentRecord` lama yang lokasinya sudah dihapus/diganti nama (lihat `LocationModels` di Bagian 7, tidak ada soft-delete) akan di-skip diam-diam dari breakdown, sementara angka total (`totalInsiden`) dihitung dari seluruh `incidentList` tanpa filter yang sama. **Status: ditemukan, belum diperbaiki** — redesign chart yang sudah masuk ke `DataLocation.jsx` (donut + legend baru) murni perubahan visual dan tidak menyentuh logika ini. Fix yang perlu diterapkan: hitung total dari data yang benar-benar ditampilkan di breakdown (bukan `incidentList.length` mentah), dan tampilkan warning jumlah insiden yang "tidak tertaut ke lokasi aktif" alih-alih menyembunyikannya diam-diam. Item kerja ini juga dicatat di Bagian 5 (V2).
+- **⚠️ Baru, dari audit kode — ditemukan dan diperbaiki di Draft 1.3:** Total insiden di dashboard Data Lokasi (`DataLocation.jsx`) sempat bisa tidak match dengan breakdown per lokasi. Penyebabnya: `getChartData()` hanya menghitung insiden yang field `location`-nya cocok persis dengan salah satu `LocationModels` yang masih aktif — `IncidentRecord` lama yang lokasinya sudah dihapus/diganti nama (lihat `LocationModels` di Bagian 7, tidak ada soft-delete) di-skip diam-diam dari breakdown, sementara angka total (`totalInsiden`) dihitung dari seluruh `incidentList` tanpa filter yang sama. **Fix yang sudah diterapkan:** total sekarang dihitung dari penjumlahan data yang benar-benar ditampilkan di breakdown (bukan `incidentList.length` mentah), dan dashboard menampilkan warning banner berisi jumlah insiden yang "tidak tertaut ke lokasi aktif" alih-alih menyembunyikannya diam-diam (`unmatchedCount` di `getChartData()`, ditampilkan lewat `unmatchedIncidentCount`). Root cause di sisi data (histori `IncidentRecord`/`ComplaintRecord` bisa lepas dari referensi kalau `LocationModels`/`CategoryModels` dihapus tanpa soft-delete) masih terbuka — lihat Open Questions #7.
 
 ## 9. Success Metrics
 
