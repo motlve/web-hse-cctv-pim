@@ -7,7 +7,7 @@ import api from '../api/axios';
 
 import MonitoringCalendar from '../components/Calander';
 
-import { FiCamera, FiBarChart2, FiArrowRight, FiCalendar } from 'react-icons/fi';
+import { FiCamera, FiBarChart2, FiArrowRight, FiCalendar, FiAlertTriangle } from 'react-icons/fi';
 import { FiVideo, FiGrid } from 'react-icons/fi';
 import { FiPlusCircle } from 'react-icons/fi';
 
@@ -601,6 +601,11 @@ export default function CameraOccupancyCam() {
 
           analog: 0,
 
+          // Dipakai sebagai penyebul persentase — bukan ip+analog, supaya
+          // konsisten dengan formula PersentaseIP/PersentaseAnalog yang
+          // dihitung backend (CameraOccupancyController.go) dari total_kamera.
+          // total_kamera diinput manual terpisah dari ip/analog di form, jadi
+          // keduanya tidak dijamin selalu sama.
           total: 0,
         };
       }
@@ -609,7 +614,7 @@ export default function CameraOccupancyCam() {
 
       areaMap[area].analog += Number(item.analog || 0);
 
-      areaMap[area].total = areaMap[area].ip + areaMap[area].analog;
+      areaMap[area].total += Number(item.total_kamera || 0);
     });
 
     const ranking = Object.values(areaMap)
@@ -759,6 +764,15 @@ export default function CameraOccupancyCam() {
   const cameraTypeByAreaAnalysis = getCameraTypeByAreaAnalysis();
   const cameraTypeByAreaChart = getCameraTypeByAreaChart();
 
+  // total_kamera, ip, dan analog diinput manual terpisah di form (tidak ada
+  // validasi total_kamera === ip + analog) — dihitung di sini supaya panel
+  // "Camera Type" & "Camera Type By Area" bisa memberi tahu kalau ada baris
+  // data yang datanya tidak konsisten, bukan diam-diam menampilkan
+  // persentase yang bergantung pada total_kamera tanpa penjelasan.
+  const mismatchedOccupancyCount = cameraOccupancyList.filter(
+    (item) => Number(item.total_kamera || 0) !== Number(item.ip || 0) + Number(item.analog || 0)
+  ).length;
+
   // =====================================
   // Request Camera By Location Analysis
   // =====================================
@@ -877,13 +891,17 @@ export default function CameraOccupancyCam() {
   const getCameraTypeAnalysis = () => {
     let totalIP = 0;
     let totalAnalog = 0;
+    // Dipakai sebagai penyebut persentase & "Total kamera" pada insight —
+    // bukan ip+analog, supaya konsisten dengan formula PersentaseIP/
+    // PersentaseAnalog yang dihitung backend dari total_kamera (field input
+    // manual yang terpisah dari ip/analog, tidak dijamin selalu ip+analog).
+    let totalCamera = 0;
 
     cameraOccupancyList.forEach((item) => {
       totalIP += Number(item.ip || 0);
       totalAnalog += Number(item.analog || 0);
+      totalCamera += Number(item.total_kamera || 0);
     });
-
-    const totalCamera = totalIP + totalAnalog;
 
     const ipPercentage = totalCamera === 0 ? 0 : Number(((totalIP / totalCamera) * 100).toFixed(2));
 
@@ -1722,22 +1740,22 @@ export default function CameraOccupancyCam() {
 
         {showDistributionAnalysis && (
           <div
-            className="fixed inset-0 bg-black/60 backdrop-blur-md flex justify-center items-center z-50 p-6"
+            className="fixed inset-0 bg-black/60 backdrop-blur-md flex justify-center items-center z-50 p-2 sm:p-4 md:p-6"
             onClick={() => setShowDistributionAnalysis(false)}
           >
             <div
-              className="bg-white rounded-[36px] shadow-2xl w-full max-w-7xl max-h-[92vh] overflow-y-auto p-8"
+              className="bg-white rounded-2xl md:rounded-[36px] shadow-2xl w-full max-w-7xl max-h-[95vh] md:max-h-[92vh] overflow-y-auto p-4 sm:p-6 md:p-8"
               onClick={(e) => e.stopPropagation()}
             >
               {/* HEADER */}
 
-              <div className="flex justify-between items-center mb-8">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
                 <div>
                   <p className="uppercase tracking-[5px] text-blue-500 text-xs font-semibold">
                     ANALISIS OCCUPANCY KAMERA CCTV
                   </p>
 
-                  <h2 className="text-4xl font-bold mt-2 flex items-center gap-3">
+                  <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mt-2 flex items-center gap-3">
                     <FiMapPin className="text-blue-600" />
                     Analisis Distribusi Kamera CCTV
                   </h2>
@@ -1757,11 +1775,11 @@ export default function CameraOccupancyCam() {
 
               {/* KPI */}
 
-              <div className="grid grid-cols-4 gap-6 mb-8">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-6 mb-8">
                 <div className="bg-blue-50 rounded-3xl p-6">
                   <p className="text-gray-500">Total Lokasi Monitoring</p>
 
-                  <h2 className="text-5xl font-bold text-blue-600 mt-2">
+                  <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-blue-600 mt-2">
                     {distributionAnalysis.totalArea}
                   </h2>
                 </div>
@@ -1769,7 +1787,7 @@ export default function CameraOccupancyCam() {
                 <div className="bg-green-50 rounded-3xl p-6">
                   <p className="text-gray-500">Total Kamera CCTV</p>
 
-                  <h2 className="text-5xl font-bold text-green-600 mt-2">
+                  <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-green-600 mt-2">
                     {distributionAnalysis.totalCamera}
                   </h2>
                 </div>
@@ -1777,7 +1795,7 @@ export default function CameraOccupancyCam() {
                 <div className="bg-yellow-50 rounded-3xl p-6">
                   <p className="text-gray-500">Rata-rata Kamera</p>
 
-                  <h2 className="text-5xl font-bold text-yellow-600 mt-2">
+                  <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-yellow-600 mt-2">
                     {distributionAnalysis.average}
                   </h2>
 
@@ -1805,7 +1823,7 @@ export default function CameraOccupancyCam() {
                   Grafik Distribusi Kamera CCTV
                 </h3>
 
-                <div className="h-[420px]">
+                <div className="h-[260px] sm:h-[320px] md:h-[420px]">
                   <Bar data={distributionChart} options={lineChartOptions} />
                 </div>
               </div>
@@ -1818,38 +1836,40 @@ export default function CameraOccupancyCam() {
                   Ranking Distribusi Kamera
                 </h3>
 
-                <table className="w-full rounded-3xl overflow-hidden">
-                  <thead className="bg-blue-600 text-white">
-                    <tr>
-                      <th className="p-4">No</th>
+                <div className="overflow-x-auto -mx-3 px-3 md:mx-0 md:px-0">
+                  <table className="w-full min-w-[600px] rounded-3xl overflow-hidden">
+                    <thead className="bg-blue-600 text-white">
+                      <tr>
+                        <th className="p-4">No</th>
 
-                      <th>Lokasi</th>
+                        <th>Lokasi</th>
 
-                      <th>Total Kamera CCTV</th>
+                        <th>Total Kamera CCTV</th>
 
-                      <th>Persentase</th>
-                    </tr>
-                  </thead>
-
-                  <tbody>
-                    {distributionAnalysis.ranking.map((item, index) => (
-                      <tr key={index} className="border-b text-center hover:bg-gray-50">
-                        <td className="p-4">{index + 1}</td>
-
-                        <td className="font-semibold">{item.area}</td>
-
-                        <td>{item.total}</td>
-
-                        <td>
-                          {distributionAnalysis.totalCamera
-                            ? ((item.total / distributionAnalysis.totalCamera) * 100).toFixed(1)
-                            : '0.0'}
-                          %
-                        </td>
+                        <th>Persentase</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+
+                    <tbody>
+                      {distributionAnalysis.ranking.map((item, index) => (
+                        <tr key={index} className="border-b text-center hover:bg-gray-50">
+                          <td className="p-4">{index + 1}</td>
+
+                          <td className="font-semibold">{item.area}</td>
+
+                          <td>{item.total}</td>
+
+                          <td>
+                            {distributionAnalysis.totalCamera
+                              ? ((item.total / distributionAnalysis.totalCamera) * 100).toFixed(1)
+                              : '0.0'}
+                            %
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
 
               {/* INSIGHT */}
@@ -1891,22 +1911,22 @@ export default function CameraOccupancyCam() {
 
         {showCameraTypeAnalysis && (
           <div
-            className="fixed inset-0 bg-black/60 backdrop-blur-md flex justify-center items-center z-50 p-6"
+            className="fixed inset-0 bg-black/60 backdrop-blur-md flex justify-center items-center z-50 p-2 sm:p-4 md:p-6"
             onClick={() => setShowCameraTypeAnalysis(false)}
           >
             <div
-              className="bg-white rounded-[36px] shadow-2xl w-full max-w-7xl max-h-[92vh] overflow-y-auto p-8"
+              className="bg-white rounded-2xl md:rounded-[36px] shadow-2xl w-full max-w-7xl max-h-[95vh] md:max-h-[92vh] overflow-y-auto p-4 sm:p-6 md:p-8"
               onClick={(e) => e.stopPropagation()}
             >
               {/* HEADER */}
 
-              <div className="flex justify-between items-center mb-8">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
                 <div>
                   <p className="uppercase tracking-[5px] text-green-600 text-xs font-semibold">
                     ANALISIS TIPE CAMERA
                   </p>
 
-                  <h2 className="text-4xl font-bold mt-2 flex items-center gap-3">
+                  <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mt-2 flex items-center gap-3">
                     <FiVideo />
                     Analisis Tipe Kamera
                   </h2>
@@ -1924,13 +1944,24 @@ export default function CameraOccupancyCam() {
                 </button>
               </div>
 
+              {mismatchedOccupancyCount > 0 && (
+                <div className="mb-6 flex items-start gap-2 rounded-2xl bg-amber-50 border border-amber-200 px-4 py-3 text-amber-800">
+                  <FiAlertTriangle size={18} className="mt-0.5 shrink-0" />
+                  <p className="text-sm leading-snug">
+                    <b>{mismatchedOccupancyCount}</b> data occupancy punya "Total Kamera" yang
+                    tidak sama dengan penjumlahan IP + Analog — persentase di bawah dihitung dari
+                    "Total Kamera" (sesuai perhitungan backend), bukan dari IP + Analog.
+                  </p>
+                </div>
+              )}
+
               {/* KPI */}
 
-              <div className="grid grid-cols-4 gap-6 mb-8">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-6 mb-8">
                 <div className="bg-blue-50 rounded-3xl p-6">
                   <p className="text-gray-500">Total Kamera</p>
 
-                  <h2 className="text-5xl font-bold text-blue-600 mt-2">
+                  <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-blue-600 mt-2">
                     {cameraTypeAnalysis.totalCamera}
                   </h2>
                 </div>
@@ -1938,7 +1969,7 @@ export default function CameraOccupancyCam() {
                 <div className="bg-green-50 rounded-3xl p-6">
                   <p className="text-gray-500">IP Camera</p>
 
-                  <h2 className="text-5xl font-bold text-green-600 mt-2">
+                  <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-green-600 mt-2">
                     {cameraTypeAnalysis.totalIP}
                   </h2>
 
@@ -1948,7 +1979,7 @@ export default function CameraOccupancyCam() {
                 <div className="bg-yellow-50 rounded-3xl p-6">
                   <p className="text-gray-500">Analog Camera</p>
 
-                  <h2 className="text-5xl font-bold text-yellow-600 mt-2">
+                  <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-yellow-600 mt-2">
                     {cameraTypeAnalysis.totalAnalog}
                   </h2>
 
@@ -1974,7 +2005,7 @@ export default function CameraOccupancyCam() {
                   Distribusi Tipe Kamera
                 </h3>
 
-                <div className="h-[420px] flex justify-center">
+                <div className="h-[260px] sm:h-[320px] md:h-[420px] flex justify-center">
                   <Pie data={cameraTypeChart} options={pieOptions} />
                 </div>
               </div>
@@ -1987,33 +2018,35 @@ export default function CameraOccupancyCam() {
                   Ringkasan Tipe Kamera
                 </h3>
 
-                <table className="w-full rounded-3xl overflow-hidden">
-                  <thead className="bg-green-600 text-white">
-                    <tr>
-                      <th className="p-4">No</th>
+                <div className="overflow-x-auto -mx-3 px-3 md:mx-0 md:px-0">
+                  <table className="w-full min-w-[600px] rounded-3xl overflow-hidden">
+                    <thead className="bg-green-600 text-white">
+                      <tr>
+                        <th className="p-4">No</th>
 
-                      <th>Tipe Kamera</th>
+                        <th>Tipe Kamera</th>
 
-                      <th>Jumlah</th>
+                        <th>Jumlah</th>
 
-                      <th>Persentase</th>
-                    </tr>
-                  </thead>
-
-                  <tbody>
-                    {cameraTypeAnalysis.ranking.map((item, index) => (
-                      <tr key={index} className="border-b text-center hover:bg-gray-50">
-                        <td className="p-4">{index + 1}</td>
-
-                        <td className="font-semibold">{item.type}</td>
-
-                        <td>{item.total}</td>
-
-                        <td>{item.percentage}%</td>
+                        <th>Persentase</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+
+                    <tbody>
+                      {cameraTypeAnalysis.ranking.map((item, index) => (
+                        <tr key={index} className="border-b text-center hover:bg-gray-50">
+                          <td className="p-4">{index + 1}</td>
+
+                          <td className="font-semibold">{item.type}</td>
+
+                          <td>{item.total}</td>
+
+                          <td>{item.percentage}%</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
 
               {/* INSIGHT */}
@@ -2058,22 +2091,22 @@ export default function CameraOccupancyCam() {
 
         {showAdditionalCameraAnalysis && (
           <div
-            className="fixed inset-0 bg-black/60 backdrop-blur-md flex justify-center items-center z-50 p-6"
+            className="fixed inset-0 bg-black/60 backdrop-blur-md flex justify-center items-center z-50 p-2 sm:p-4 md:p-6"
             onClick={() => setShowAdditionalCameraAnalysis(false)}
           >
             <div
-              className="bg-white rounded-[36px] shadow-2xl w-full max-w-7xl max-h-[92vh] overflow-y-auto p-8"
+              className="bg-white rounded-2xl md:rounded-[36px] shadow-2xl w-full max-w-7xl max-h-[95vh] md:max-h-[92vh] overflow-y-auto p-4 sm:p-6 md:p-8"
               onClick={(e) => e.stopPropagation()}
             >
               {/* HEADER */}
 
-              <div className="flex justify-between items-center mb-8">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
                 <div>
                   <p className="uppercase tracking-[5px] text-red-500 text-xs font-semibold">
                     ANALISIS EKSPANSI CAMERA
                   </p>
 
-                  <h2 className="text-4xl font-bold mt-2 flex items-center gap-3">
+                  <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mt-2 flex items-center gap-3">
                     <FiPlusCircle />
                     Analisis Kebutuhan Penambahan Kamera
                   </h2>
@@ -2093,11 +2126,11 @@ export default function CameraOccupancyCam() {
 
               {/* KPI */}
 
-              <div className="grid grid-cols-4 gap-6 mb-8">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-6 mb-8">
                 <div className="bg-red-50 rounded-3xl p-6">
                   <p className="text-gray-500">Total Tambahan Kamera</p>
 
-                  <h2 className="text-5xl font-bold text-red-600 mt-2">
+                  <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-red-600 mt-2">
                     {additionalCameraAnalysis.totalAdditional}
                   </h2>
                 </div>
@@ -2105,7 +2138,7 @@ export default function CameraOccupancyCam() {
                 <div className="bg-blue-50 rounded-3xl p-6">
                   <p className="text-gray-500">Total Area</p>
 
-                  <h2 className="text-5xl font-bold text-blue-600 mt-2">
+                  <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-blue-600 mt-2">
                     {additionalCameraAnalysis.totalArea}
                   </h2>
                 </div>
@@ -2113,7 +2146,7 @@ export default function CameraOccupancyCam() {
                 <div className="bg-green-50 rounded-3xl p-6">
                   <p className="text-gray-500">Rata-rata Kebutuhan</p>
 
-                  <h2 className="text-5xl font-bold text-green-600 mt-2">
+                  <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-green-600 mt-2">
                     {additionalCameraAnalysis.average}
                   </h2>
 
@@ -2141,7 +2174,7 @@ export default function CameraOccupancyCam() {
                   Analisis Kebutuhan Penambahan Kamera
                 </h3>
 
-                <div className="h-[420px]">
+                <div className="h-[260px] sm:h-[320px] md:h-[420px]">
                   <Bar data={additionalCameraChart} options={lineChartOptions} />
                 </div>
               </div>
@@ -2154,41 +2187,43 @@ export default function CameraOccupancyCam() {
                   Ranking Kebutuhan Penambahan Kamera
                 </h3>
 
-                <table className="w-full rounded-3xl overflow-hidden">
-                  <thead className="bg-red-600 text-white">
-                    <tr>
-                      <th className="p-4">No</th>
+                <div className="overflow-x-auto -mx-3 px-3 md:mx-0 md:px-0">
+                  <table className="w-full min-w-[600px] rounded-3xl overflow-hidden">
+                    <thead className="bg-red-600 text-white">
+                      <tr>
+                        <th className="p-4">No</th>
 
-                      <th>Area</th>
+                        <th>Area</th>
 
-                      <th>Tambahan Kamera</th>
+                        <th>Tambahan Kamera</th>
 
-                      <th>Kontribusi</th>
-                    </tr>
-                  </thead>
-
-                  <tbody>
-                    {additionalCameraAnalysis.ranking.map((item, index) => (
-                      <tr key={index} className="border-b text-center hover:bg-gray-50">
-                        <td className="p-4">{index + 1}</td>
-
-                        <td className="font-semibold">{item.area}</td>
-
-                        <td>{item.total}</td>
-
-                        <td>
-                          {additionalCameraAnalysis.totalAdditional
-                            ? (
-                                (item.total / additionalCameraAnalysis.totalAdditional) *
-                                100
-                              ).toFixed(1)
-                            : '0.0'}
-                          %
-                        </td>
+                        <th>Kontribusi</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+
+                    <tbody>
+                      {additionalCameraAnalysis.ranking.map((item, index) => (
+                        <tr key={index} className="border-b text-center hover:bg-gray-50">
+                          <td className="p-4">{index + 1}</td>
+
+                          <td className="font-semibold">{item.area}</td>
+
+                          <td>{item.total}</td>
+
+                          <td>
+                            {additionalCameraAnalysis.totalAdditional
+                              ? (
+                                  (item.total / additionalCameraAnalysis.totalAdditional) *
+                                  100
+                                ).toFixed(1)
+                              : '0.0'}
+                            %
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
 
               {/* INSIGHT */}
@@ -2234,22 +2269,22 @@ export default function CameraOccupancyCam() {
 
         {showOccupancySummary && (
           <div
-            className="fixed inset-0 bg-black/60 backdrop-blur-md flex justify-center items-center z-50 p-6"
+            className="fixed inset-0 bg-black/60 backdrop-blur-md flex justify-center items-center z-50 p-2 sm:p-4 md:p-6"
             onClick={() => setShowOccupancySummary(false)}
           >
             <div
-              className="bg-white rounded-[36px] shadow-2xl w-full max-w-7xl max-h-[92vh] overflow-y-auto p-8"
+              className="bg-white rounded-2xl md:rounded-[36px] shadow-2xl w-full max-w-7xl max-h-[95vh] md:max-h-[92vh] overflow-y-auto p-4 sm:p-6 md:p-8"
               onClick={(e) => e.stopPropagation()}
             >
               {/* HEADER */}
 
-              <div className="flex justify-between items-center mb-8">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
                 <div>
                   <p className="uppercase tracking-[5px] text-indigo-600 text-xs font-semibold">
                     EXECUTIVE SUMMARY
                   </p>
 
-                  <h2 className="text-4xl font-bold mt-2">📊 Camera Occupancy Summary</h2>
+                  <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mt-2">📊 Camera Occupancy Summary</h2>
 
                   <p className="text-gray-500 mt-2">
                     Ringkasan kondisi keseluruhan infrastruktur CCTV.
@@ -2266,11 +2301,11 @@ export default function CameraOccupancyCam() {
 
               {/* KPI */}
 
-              <div className="grid grid-cols-4 gap-6 mb-8">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-6 mb-8">
                 <div className="bg-blue-50 rounded-3xl p-6">
                   <p className="text-gray-500">Total Camera</p>
 
-                  <h2 className="text-5xl font-bold text-blue-600 mt-2">
+                  <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-blue-600 mt-2">
                     {occupancySummary.totalCamera}
                   </h2>
                 </div>
@@ -2278,7 +2313,7 @@ export default function CameraOccupancyCam() {
                 <div className="bg-green-50 rounded-3xl p-6">
                   <p className="text-gray-500">IP Camera</p>
 
-                  <h2 className="text-5xl font-bold text-green-600 mt-2">
+                  <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-green-600 mt-2">
                     {occupancySummary.totalIP}
                   </h2>
 
@@ -2288,7 +2323,7 @@ export default function CameraOccupancyCam() {
                 <div className="bg-yellow-50 rounded-3xl p-6">
                   <p className="text-gray-500">Analog Camera</p>
 
-                  <h2 className="text-5xl font-bold text-yellow-600 mt-2">
+                  <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-yellow-600 mt-2">
                     {occupancySummary.totalAnalog}
                   </h2>
 
@@ -2298,7 +2333,7 @@ export default function CameraOccupancyCam() {
                 <div className="bg-red-50 rounded-3xl p-6">
                   <p className="text-gray-500">Additional Camera</p>
 
-                  <h2 className="text-5xl font-bold text-red-600 mt-2">
+                  <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-red-600 mt-2">
                     {occupancySummary.totalAdditional}
                   </h2>
                 </div>
@@ -2309,7 +2344,7 @@ export default function CameraOccupancyCam() {
               <div className="bg-white border rounded-[32px] shadow-inner p-8 mb-8">
                 <h3 className="text-2xl font-bold mb-5">📈 Occupancy Summary</h3>
 
-                <div className="h-[420px]">
+                <div className="h-[260px] sm:h-[320px] md:h-[420px]">
                   <Bar data={occupancySummaryChart} options={lineChartOptions} />
                 </div>
               </div>
@@ -2319,43 +2354,45 @@ export default function CameraOccupancyCam() {
               <div className="mb-8">
                 <h3 className="text-2xl font-bold mb-5">📋 Camera Occupancy Overview</h3>
 
-                <table className="w-full rounded-3xl overflow-hidden">
-                  <thead className="bg-indigo-600 text-white">
-                    <tr>
-                      <th className="p-4">Category</th>
+                <div className="overflow-x-auto -mx-3 px-3 md:mx-0 md:px-0">
+                  <table className="w-full min-w-[420px] rounded-3xl overflow-hidden">
+                    <thead className="bg-indigo-600 text-white">
+                      <tr>
+                        <th className="p-4">Category</th>
 
-                      <th>Total</th>
+                        <th>Total</th>
 
-                      <th>Percentage</th>
-                    </tr>
-                  </thead>
+                        <th>Percentage</th>
+                      </tr>
+                    </thead>
 
-                  <tbody>
-                    <tr className="text-center border-b">
-                      <td>Total Camera</td>
-                      <td>{occupancySummary.totalCamera}</td>
-                      <td>100%</td>
-                    </tr>
+                    <tbody>
+                      <tr className="text-center border-b">
+                        <td>Total Camera</td>
+                        <td>{occupancySummary.totalCamera}</td>
+                        <td>100%</td>
+                      </tr>
 
-                    <tr className="text-center border-b">
-                      <td>IP Camera</td>
-                      <td>{occupancySummary.totalIP}</td>
-                      <td>{occupancySummary.ipPercentage}%</td>
-                    </tr>
+                      <tr className="text-center border-b">
+                        <td>IP Camera</td>
+                        <td>{occupancySummary.totalIP}</td>
+                        <td>{occupancySummary.ipPercentage}%</td>
+                      </tr>
 
-                    <tr className="text-center border-b">
-                      <td>Analog Camera</td>
-                      <td>{occupancySummary.totalAnalog}</td>
-                      <td>{occupancySummary.analogPercentage}%</td>
-                    </tr>
+                      <tr className="text-center border-b">
+                        <td>Analog Camera</td>
+                        <td>{occupancySummary.totalAnalog}</td>
+                        <td>{occupancySummary.analogPercentage}%</td>
+                      </tr>
 
-                    <tr className="text-center border-b">
-                      <td>Additional Camera</td>
-                      <td>{occupancySummary.totalAdditional}</td>
-                      <td>{occupancySummary.additionalRate}%</td>
-                    </tr>
-                  </tbody>
-                </table>
+                      <tr className="text-center border-b">
+                        <td>Additional Camera</td>
+                        <td>{occupancySummary.totalAdditional}</td>
+                        <td>{occupancySummary.additionalRate}%</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
               </div>
 
               {/* INSIGHT */}
@@ -2391,22 +2428,22 @@ export default function CameraOccupancyCam() {
 
         {showCameraTypeByAreaAnalysis && (
           <div
-            className="fixed inset-0 bg-black/60 backdrop-blur-md flex justify-center items-center z-[999] p-6"
+            className="fixed inset-0 bg-black/60 backdrop-blur-md flex justify-center items-center z-[999] p-2 sm:p-4 md:p-6"
             onClick={() => setShowCameraTypeByAreaAnalysis(false)}
           >
             <div
-              className="bg-white rounded-[36px] shadow-2xl w-full max-w-7xl max-h-[92vh] overflow-y-auto p-10"
+              className="bg-white rounded-2xl md:rounded-[36px] shadow-2xl w-full max-w-7xl max-h-[95vh] md:max-h-[92vh] overflow-y-auto p-4 sm:p-6 md:p-10"
               onClick={(e) => e.stopPropagation()}
             >
               {/* HEADER */}
 
-              <div className="flex justify-between items-start mb-10">
+              <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-10">
                 <div>
                   <p className="uppercase tracking-[6px] text-blue-600 text-xs font-semibold">
                     CAMERA INTELLIGENCE REPORT
                   </p>
 
-                  <h2 className="text-4xl font-bold text-gray-800 mt-3">
+                  <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800 mt-3">
                     📊 Camera Type By Area Analysis
                   </h2>
 
@@ -2417,19 +2454,30 @@ export default function CameraOccupancyCam() {
 
                 <button
                   onClick={() => setShowCameraTypeByAreaAnalysis(false)}
-                  className="w-12 h-12 rounded-full bg-red-100 hover:bg-red-500 hover:text-white duration-300 text-3xl"
+                  className="w-12 h-12 rounded-full bg-red-100 hover:bg-red-500 hover:text-white duration-300 text-3xl shrink-0"
                 >
                   ×
                 </button>
               </div>
 
+              {mismatchedOccupancyCount > 0 && (
+                <div className="mb-8 flex items-start gap-2 rounded-2xl bg-amber-50 border border-amber-200 px-4 py-3 text-amber-800">
+                  <FiAlertTriangle size={18} className="mt-0.5 shrink-0" />
+                  <p className="text-sm leading-snug">
+                    <b>{mismatchedOccupancyCount}</b> data occupancy punya "Total Kamera" yang
+                    tidak sama dengan penjumlahan IP + Analog — persentase di bawah dihitung dari
+                    "Total Kamera" (sesuai perhitungan backend), bukan dari IP + Analog.
+                  </p>
+                </div>
+              )}
+
               {/* KPI */}
 
-              <div className="grid grid-cols-4 gap-6 mb-10">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-6 mb-10">
                 <div className="bg-gray-50 rounded-3xl p-6">
                   <p className="text-gray-500">Total Area</p>
 
-                  <h2 className="text-5xl font-bold text-gray-800 mt-3">
+                  <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-800 mt-3">
                     {cameraTypeByAreaAnalysis.totalArea}
                   </h2>
                 </div>
@@ -2437,7 +2485,7 @@ export default function CameraOccupancyCam() {
                 <div className="bg-blue-50 rounded-3xl p-6">
                   <p className="text-blue-600">IP Camera</p>
 
-                  <h2 className="text-5xl font-bold text-blue-600 mt-3">
+                  <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-blue-600 mt-3">
                     {cameraTypeByAreaAnalysis.totalIP}
                   </h2>
 
@@ -2447,7 +2495,7 @@ export default function CameraOccupancyCam() {
                 <div className="bg-orange-50 rounded-3xl p-6">
                   <p className="text-orange-600">Analog Camera</p>
 
-                  <h2 className="text-5xl font-bold text-orange-600 mt-3">
+                  <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-orange-600 mt-3">
                     {cameraTypeByAreaAnalysis.totalAnalog}
                   </h2>
 
@@ -2459,7 +2507,7 @@ export default function CameraOccupancyCam() {
                 <div className="bg-green-50 rounded-3xl p-6">
                   <p className="text-green-600">Total Camera</p>
 
-                  <h2 className="text-5xl font-bold text-green-600 mt-3">
+                  <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-green-600 mt-3">
                     {cameraTypeByAreaAnalysis.totalCamera}
                   </h2>
                 </div>
@@ -2477,7 +2525,7 @@ export default function CameraOccupancyCam() {
                   <span className="text-gray-500">IP vs Analog</span>
                 </div>
 
-                <div className="h-[420px]">
+                <div className="h-[260px] sm:h-[320px] md:h-[420px]">
                   <Line
                     data={cameraTypeByAreaChart}
                     options={{
@@ -2554,8 +2602,8 @@ export default function CameraOccupancyCam() {
                   Perbandingan Teknologi Kamera Berdasarkan Area
                 </div>
 
-                <div className="overflow-x-auto">
-                  <table className="w-full">
+                <div className="overflow-x-auto -mx-3 px-3 md:mx-0 md:px-0">
+                  <table className="w-full min-w-[700px]">
                     <thead>
                       <tr className="bg-blue-600 text-white">
                         <th>Area</th>
@@ -2857,7 +2905,7 @@ export default function CameraOccupancyCam() {
 
       {showForm && (
         <div
-          className="fixed inset-0 bg-black/40 backdrop-blur-xl flex items-center justify-center z-[999] p-6 overflow-y-auto"
+          className="fixed inset-0 bg-black/40 backdrop-blur-xl flex items-center justify-center z-[999] p-2 sm:p-4 md:p-6 overflow-y-auto"
           onClick={() => {
             setShowForm(false);
             setIsEditing(false);
@@ -2865,17 +2913,17 @@ export default function CameraOccupancyCam() {
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="bg-white/90 backdrop-blur-3xl rounded-[40px] shadow-[0_40px_100px_rgba(0,0,0,.2)] w-full max-w-4xl max-h-[90vh] overflow-y-auto p-10"
+            className="bg-white/90 backdrop-blur-3xl rounded-2xl md:rounded-[40px] shadow-[0_40px_100px_rgba(0,0,0,.2)] w-full max-w-4xl max-h-[95vh] md:max-h-[90vh] overflow-y-auto p-4 sm:p-6 md:p-10"
           >
             {/* HEADER */}
 
-            <div className="flex justify-between items-start mb-10">
+            <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-10">
               <div>
                 <p className="uppercase tracking-[6px] text-blue-600 text-xs font-semibold">
                   ANALISIS OKUPANSI KAMERA
                 </p>
 
-                <h2 className="text-4xl font-bold text-gray-800 mt-3 flex items-center gap-3">
+                <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800 mt-3 flex items-center gap-3">
                   <FiCamera className="text-blue-600" />
                   Form Data Okupansi Kamera
                 </h2>
@@ -2888,7 +2936,7 @@ export default function CameraOccupancyCam() {
 
               <button
                 onClick={() => setShowForm(false)}
-                className="w-12 h-12 rounded-full bg-red-100 hover:bg-red-500 hover:text-white duration-300 text-3xl flex items-center justify-center"
+                className="w-12 h-12 rounded-full bg-red-100 hover:bg-red-500 hover:text-white duration-300 text-3xl flex items-center justify-center shrink-0"
               >
                 <FiX />
               </button>
@@ -3004,18 +3052,18 @@ export default function CameraOccupancyCam() {
 
               {/* BUTTON */}
 
-              <div className="md:col-span-2 flex justify-end gap-3 mt-6">
+              <div className="md:col-span-2 flex flex-col-reverse sm:flex-row justify-end gap-3 mt-6">
                 <button
                   type="button"
                   onClick={() => setShowForm(false)}
-                  className="px-6 py-3 rounded-2xl bg-gray-100 hover:bg-gray-200 duration-300"
+                  className="w-full sm:w-auto px-6 py-3 rounded-2xl bg-gray-100 hover:bg-gray-200 duration-300"
                 >
                   Batal
                 </button>
 
                 <button
                   type="submit"
-                  className="px-8 py-3 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold shadow-lg shadow-blue-500/30 hover:scale-105 duration-300"
+                  className="w-full sm:w-auto px-8 py-3 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold shadow-lg shadow-blue-500/30 hover:scale-105 duration-300"
                 >
                   {isEditing ? 'Simpan Perubahan' : 'Tambah Data'}
                 </button>
@@ -3044,8 +3092,8 @@ export default function CameraOccupancyCam() {
           />
         </div>
 
-        <div className="overflow-x-auto rounded-2xl shadow-xl bg-white/40 backdrop-blur-md">
-          <table className="min-w-full divide-y divide-gray-300">
+        <div className="overflow-x-auto -mx-3 px-3 md:mx-0 md:px-0 rounded-2xl shadow-xl bg-white/40 backdrop-blur-md">
+          <table className="min-w-[900px] divide-y divide-gray-300">
             <thead className="bg-white/60">
               <tr>
                 <th className="px-6 py-3">No</th>

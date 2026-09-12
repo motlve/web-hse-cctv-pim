@@ -15,6 +15,28 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+// Role tersimpan sebagai varchar bebas di DB (models.User.Role), tanpa enum
+// constraint — whitelist ini mencegah role di luar daftar yang dikenal
+// frontend (dropdown "Hak Akses Role" di User.jsx) masuk lewat API langsung,
+// yang kalau lolos akan hilang diam-diam dari role distribution chart.
+var validUserRoles = []string{
+	"Admin",
+	"Manager HSE",
+	"Petugas CCTV",
+	"Petugas HSE",
+	"Petugas GSL",
+	"Guest",
+}
+
+func isValidUserRole(role string) bool {
+	for _, r := range validUserRoles {
+		if r == role {
+			return true
+		}
+	}
+	return false
+}
+
 func updateUserActivity(username string) {
 
 	now := time.Now()
@@ -308,6 +330,18 @@ func CreateUser(
 	}
 
 
+	if !isValidUserRole(req.Role) {
+
+		http.Error(
+			w,
+			"Role tidak valid",
+			http.StatusBadRequest,
+		)
+
+		return
+	}
+
+
 
 
 	// =====================================
@@ -472,172 +506,98 @@ func UpdateUser(
 	r *http.Request,
 ) {
 
-
-
-	id :=
-		mux.Vars(r)["id"]
-
-
+	id := mux.Vars(r)["id"]
 
 	var user models.User
 
-
-
-	if err :=
-		config.DB.First(
-			&user,
-			id,
-		).Error;
-		err != nil {
-
-
-		http.Error(
-			w,
-			"User tidak ditemukan",
-			http.StatusNotFound,
-		)
-
-
+	if err := config.DB.First(&user, id).Error; err != nil {
+		http.Error(w, "User tidak ditemukan", http.StatusNotFound)
 		return
 	}
 
+	// =====================================
+	// CEK IDENTITAS & ROLE REQUESTER
+	// =====================================
 
+	usernameVal := r.Context().Value(middlewares.UsernameKey)
+	if usernameVal == nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
 
+	requesterUsername, ok := usernameVal.(string)
+	if !ok || requesterUsername == "" {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	requester, err := models.GetUserByUsername(config.DB, requesterUsername)
+	if err != nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	isAdmin := requester.Role == "Admin"
+	isSelf := requester.ID == user.ID
+
+	// user biasa hanya boleh update dirinya sendiri
+	if !isAdmin && !isSelf {
+		http.Error(w, "Forbidden: tidak punya izin mengubah user lain", http.StatusForbidden)
+		return
+	}
 
 	var req struct {
-
-
 		Username string `json:"username"`
-
-
 		Fullname string `json:"fullname"`
-
-
-		Email string `json:"email"`
-
-
-		Role string `json:"role"`
-
-
+		Email    string `json:"email"`
+		Role     string `json:"role"`
 		Password string `json:"password"`
-
 	}
 
-
-
-
-	if err :=
-		json.NewDecoder(r.Body).Decode(&req);
-		err != nil {
-
-
-		http.Error(
-			w,
-			"Invalid request",
-			http.StatusBadRequest,
-		)
-
-
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request", http.StatusBadRequest)
 		return
 	}
 
+	user.Username = req.Username
+	user.Fullname = req.Fullname
+	user.Email = req.Email
 
-
-
-	// update data
-
-	user.Username =
-		req.Username
-
-
-	user.Fullname =
-		req.Fullname
-
-
-	user.Email =
-		req.Email
-
-
-	user.Role =
-		req.Role
-
-
-
-
-
-	// update password jika ada
-
-	if req.Password != "" {
-
-
-		hash,err :=
-			bcrypt.GenerateFromPassword(
-				[]byte(req.Password),
-				bcrypt.DefaultCost,
-			)
-
-
-
-		if err != nil {
-
-
-			http.Error(
-				w,
-				"Gagal hash password",
-				http.StatusInternalServerError,
-			)
-
-
+	// =====================================
+	// HANYA ADMIN YANG BOLEH UBAH ROLE
+	// =====================================
+	if req.Role != "" && req.Role != user.Role {
+		if !isAdmin {
+			http.Error(w, "Forbidden: hanya admin yang bisa mengubah role", http.StatusForbidden)
 			return
 		}
-
-
-
-		user.Password =
-			string(hash)
-
+		if !isValidUserRole(req.Role) {
+			http.Error(w, "Role tidak valid", http.StatusBadRequest)
+			return
+		}
+		user.Role = req.Role
 	}
 
+	// update password jika ada
+	if req.Password != "" {
+		hash, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+		if err != nil {
+			http.Error(w, "Gagal hash password", http.StatusInternalServerError)
+			return
+		}
+		user.Password = string(hash)
+	}
 
-
-
-
-	if err :=
-		config.DB.Save(&user).Error;
-		err != nil {
-
-
-		http.Error(
-			w,
-			"Gagal update user",
-			http.StatusInternalServerError,
-		)
-
-
+	if err := config.DB.Save(&user).Error; err != nil {
+		http.Error(w, "Gagal update user", http.StatusInternalServerError)
 		return
 	}
 
-
-
-
-	json.NewEncoder(w).Encode(
-		map[string]interface{}{
-
-
-			"success":true,
-
-
-			"message":
-				"User berhasil diupdate",
-
-
-			"user":
-				user,
-
-
-		},
-	)
-
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"success": true,
+		"message": "User berhasil diupdate",
+		"user":    user,
+	})
 }
 
 
