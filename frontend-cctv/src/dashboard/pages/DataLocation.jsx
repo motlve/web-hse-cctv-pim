@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import Layout from '../components/Layout';
-import { Pie } from 'react-chartjs-2';
+import { Doughnut } from 'react-chartjs-2';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { appleSwal } from '../utils/appleSwal';
@@ -8,7 +8,7 @@ import { appleSwal } from '../utils/appleSwal';
 import api from '../api/axios';
 import MonitoringCalendar from '../components/Calander';
 import { FiEdit2, FiTrash2, FiCalendar, FiPlus, FiX } from 'react-icons/fi';
-import { PieChart, RefreshCw, TrendingDown, Trophy, MapPin } from 'lucide-react';
+import { PieChart, RefreshCw, TrendingDown, Trophy, MapPin, AlertTriangle } from 'lucide-react';
 
 import 'swiper/css';
 
@@ -164,12 +164,18 @@ export default function DataLokasi() {
       locationCounts[loc.name] = 0;
     });
 
-    // Hitung jumlah insiden tiap lokasi
+    // Hitung jumlah insiden tiap lokasi, dan hitung terpisah insiden yang
+    // lokasinya tidak match ke LocationModels manapun yang masih aktif
+    // (lokasi kemungkinan sudah dihapus/diganti nama) supaya tidak hilang diam-diam.
+    let unmatchedCount = 0;
+
     incidentList.forEach((incident) => {
       const locationName = incident.location || incident.Location;
 
       if (locationName && Object.prototype.hasOwnProperty.call(locationCounts, locationName)) {
         locationCounts[locationName]++;
+      } else {
+        unmatchedCount++;
       }
     });
 
@@ -189,30 +195,47 @@ export default function DataLokasi() {
           data,
           backgroundColor: colorsForChart,
           borderColor: '#fff',
-          borderWidth: 1,
+          borderWidth: 2,
+          hoverOffset: 10,
+          hoverBorderColor: '#fff',
+          hoverBorderWidth: 3,
         },
       ],
+      unmatchedCount,
     };
   };
   const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
+    cutout: '72%',
     plugins: {
       legend: {
         display: false,
       },
       tooltip: {
         backgroundColor: '#111827',
-        titleColor: '#fff',
-        bodyColor: '#fff',
+        titleColor: '#f9fafb',
+        titleFont: { weight: '600' },
+        bodyColor: '#e5e7eb',
         cornerRadius: 12,
         padding: 12,
+        displayColors: true,
+        boxPadding: 4,
+        callbacks: {
+          label: (context) => {
+            const value = context.raw;
+            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+            const pct = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+            return ` ${context.label}: ${value} insiden (${pct}%)`;
+          },
+        },
       },
     },
     animation: {
       animateRotate: true,
       animateScale: true,
-      duration: 1500,
+      duration: 1200,
+      easing: 'easeOutQuart',
     },
   };
 
@@ -381,6 +404,12 @@ export default function DataLokasi() {
   );
 
   const chartData = getChartData(); // Call getChartData here to ensure it uses updated state
+  // Total dihitung dari data yang benar-benar ditampilkan di breakdown per lokasi
+  // (bukan incidentList.length mentah), supaya angka ini selalu konsisten dengan
+  // legend/chart di bawahnya. Insiden yang lokasinya tidak match lokasi aktif
+  // dihitung terpisah di unmatchedIncidentCount dan ditampilkan sebagai warning.
+  const totalInsiden = chartData.datasets[0].data.reduce((sum, value) => sum + value, 0);
+  const unmatchedIncidentCount = chartData.unmatchedCount;
 
   return (
     <Layout>
@@ -388,7 +417,7 @@ export default function DataLokasi() {
       <section className="p-6 w-full max-w-full mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* CHART */}
-          <div className="lg:col-span-3 bg-white/80 backdrop-blur-xl rounded-3xl p-6 shadow-2xl border border-gray-100 h-[500px]">
+          <div className="lg:col-span-3 bg-white/80 backdrop-blur-xl rounded-3xl p-6 shadow-2xl border border-gray-100 h-[420px] sm:h-[460px] lg:h-[500px]">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
                 <div className="p-2.5 rounded-xl bg-indigo-100 text-indigo-600">
@@ -415,22 +444,92 @@ export default function DataLokasi() {
               </div>
             </div>
 
-            <div className="h-[380px] flex items-center justify-center">
+            {unmatchedIncidentCount > 0 && (
+              <div className="mb-4 flex items-start gap-2 rounded-xl bg-amber-50 border border-amber-200 px-4 py-2.5 text-amber-800">
+                <AlertTriangle size={16} strokeWidth={2.2} className="mt-0.5 shrink-0" />
+                <p className="text-xs sm:text-sm leading-snug">
+                  <b>{unmatchedIncidentCount}</b> insiden tidak tertaut ke lokasi aktif mana pun
+                  (kemungkinan lokasi sudah dihapus atau diganti nama) dan tidak muncul di
+                  breakdown per lokasi di bawah.
+                </p>
+              </div>
+            )}
+
+            <div
+              className={
+                unmatchedIncidentCount > 0
+                  ? 'h-[260px] sm:h-[300px] lg:h-[340px]'
+                  : 'h-[300px] sm:h-[340px] lg:h-[380px]'
+              }
+            >
               {lokasiList.length > 0 && incidentList.length > 0 ? (
-                <Pie data={chartData} options={chartOptions} />
-              ) : (
-                <div className="text-center">
-                  <div className="flex justify-center mb-3 text-gray-300">
-                    <TrendingDown size={56} strokeWidth={1.5} />
+                <div className="h-full flex flex-col lg:flex-row items-stretch gap-2 lg:gap-8">
+                  {/* DONUT + CENTER TOTAL */}
+                  <div className="relative w-full lg:w-[42%] shrink-0 flex items-center justify-center">
+                    <div className="relative w-full max-w-[260px] aspect-square">
+                      <Doughnut data={chartData} options={chartOptions} />
+                      <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                        <span className="text-3xl sm:text-4xl font-bold text-gray-800 tabular-nums">
+                          {totalInsiden}
+                        </span>
+                        <span className="text-[11px] font-medium text-gray-400 mt-1 tracking-wide">
+                          TOTAL INSIDEN
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                  <p className="text-gray-500">Belum tersedia data lokasi atau insiden.</p>
+
+                  {/* LEGEND / BREAKDOWN LIST */}
+                  <div className="flex-1 min-w-0 flex flex-col justify-center border-t lg:border-t-0 lg:border-l border-gray-100 pt-4 lg:pt-0 lg:pl-8">
+                    <div className="space-y-1 overflow-y-auto max-h-[260px] pr-1">
+                      {chartData.labels.map((label, i) => {
+                        const value = chartData.datasets[0].data[i];
+                        const percentage =
+                          totalInsiden > 0 ? ((value / totalInsiden) * 100).toFixed(1) : '0.0';
+                        const color = chartData.datasets[0].backgroundColor[i];
+
+                        return (
+                          <div
+                            key={label}
+                            className="flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-50 transition-colors"
+                          >
+                            <div className="flex items-center gap-3 min-w-0">
+                              <span
+                                className="w-2.5 h-2.5 rounded-full shrink-0"
+                                style={{ backgroundColor: color }}
+                              />
+                              <span className="text-sm text-gray-700 truncate">{label}</span>
+                            </div>
+
+                            <div className="flex items-center gap-3 shrink-0">
+                              <span className="text-sm font-semibold text-gray-800 tabular-nums w-6 text-right">
+                                {value}
+                              </span>
+                              <span className="text-xs font-medium text-gray-400 tabular-nums w-12 text-right">
+                                {percentage}%
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="h-full flex items-center justify-center">
+                  <div className="text-center">
+                    <div className="flex justify-center mb-3 text-gray-300">
+                      <TrendingDown size={56} strokeWidth={1.5} />
+                    </div>
+                    <p className="text-gray-500">Belum tersedia data lokasi atau insiden.</p>
+                  </div>
                 </div>
               )}
             </div>
           </div>
 
           {/* TOP LOCATION */}
-          <div className="h-[500px]">
+          <div className="h-[420px] sm:h-[460px] lg:h-[500px]">
             <div
               className="
         h-full
@@ -461,7 +560,7 @@ export default function DataLokasi() {
                 slidesPerView={1}
                 spaceBetween={15}
                 loop={chartData.labels.length > 1}
-                className="h-[390px] w-full"
+                className="h-[310px] sm:h-[350px] lg:h-[390px] w-full"
                 allowTouchMove={true}
               >
                 {chartData.labels.map((location, index) => {
@@ -486,7 +585,7 @@ export default function DataLokasi() {
                           });
                         }}
                         className="
-                  h-[350px]
+                  h-[280px] sm:h-[310px] lg:h-[350px]
                   w-full
                   rounded-3xl
                   bg-gradient-to-br
@@ -831,7 +930,7 @@ flex
 items-center
 justify-center
 z-[999]
-p-6
+p-2 sm:p-4 md:p-6
 "
             onClick={() => setShowForm(false)}
           >
@@ -840,11 +939,13 @@ p-6
               className="
 bg-white/90
 backdrop-blur-3xl
-rounded-[40px]
+rounded-2xl md:rounded-[40px]
 shadow-[0_40px_100px_rgba(0,0,0,.2)]
 w-full
 max-w-xl
-p-10
+max-h-[95vh]
+overflow-y-auto
+p-4 sm:p-6 md:p-10
 "
             >
               {/* HEADER */}
@@ -852,8 +953,11 @@ p-10
               <div
                 className="
 flex
+flex-col
+sm:flex-row
 justify-between
 items-start
+gap-4
 mb-8
 "
               >
@@ -872,7 +976,8 @@ font-semibold
 
                   <h2
                     className="
-text-3xl
+text-2xl
+md:text-3xl
 font-bold
 text-gray-800
 mt-3
@@ -902,6 +1007,7 @@ hover:bg-red-500
 hover:text-white
 text-2xl
 duration-300
+shrink-0
 "
                 >
                   ×
@@ -950,6 +1056,8 @@ outline-none
                 <div
                   className="
 flex
+flex-col-reverse
+sm:flex-row
 justify-end
 gap-3
 mt-8
@@ -959,6 +1067,8 @@ mt-8
                     type="button"
                     onClick={() => setShowForm(false)}
                     className="
+w-full
+sm:w-auto
 px-6
 py-3
 rounded-2xl
@@ -973,6 +1083,8 @@ duration-300
                   <button
                     type="submit"
                     className="
+w-full
+sm:w-auto
 px-8
 py-3
 rounded-2xl
@@ -1008,7 +1120,7 @@ flex
 items-center
 justify-center
 z-[999]
-p-6
+p-2 sm:p-4 md:p-6
 "
             onClick={() => setSelectedLocation(null)}
           >
@@ -1017,18 +1129,23 @@ p-6
               className="
 bg-white/90
 backdrop-blur-3xl
-rounded-[40px]
+rounded-2xl md:rounded-[40px]
 shadow-[0_40px_100px_rgba(0,0,0,.2)]
 w-full
 max-w-4xl
-p-10
+max-h-[95vh]
+overflow-y-auto
+p-4 sm:p-6 md:p-10
 "
             >
               <div
                 className="
 flex
+flex-col
+sm:flex-row
 justify-between
 items-start
+gap-4
 mb-8
 "
               >
@@ -1039,6 +1156,7 @@ w-14
 h-14
 rounded-3xl
 shadow
+shrink-0
 "
                     style={{
                       backgroundColor: selectedLocation.color,
@@ -1060,7 +1178,8 @@ font-semibold
 
                     <h2
                       className="
-text-3xl
+text-2xl
+md:text-3xl
 font-bold
 mt-2
 "
@@ -1081,6 +1200,7 @@ hover:bg-red-500
 hover:text-white
 text-2xl
 duration-300
+shrink-0
 "
                 >
                   ×
@@ -1097,19 +1217,23 @@ gap-5
                 <div className="bg-blue-50 rounded-3xl p-6">
                   <p className="text-gray-500">Peringkat</p>
 
-                  <h3 className="text-4xl font-bold text-blue-600">#{selectedLocation.rank}</h3>
+                  <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold text-blue-600">
+                    #{selectedLocation.rank}
+                  </h3>
                 </div>
 
                 <div className="bg-red-50 rounded-3xl p-6">
                   <p className="text-gray-500">Total Insiden</p>
 
-                  <h3 className="text-4xl font-bold text-red-600">{selectedLocation.incidents}</h3>
+                  <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold text-red-600">
+                    {selectedLocation.incidents}
+                  </h3>
                 </div>
 
                 <div className="bg-green-50 rounded-3xl p-6">
                   <p className="text-gray-500">Persentase</p>
 
-                  <h3 className="text-4xl font-bold text-green-600">
+                  <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold text-green-600">
                     {selectedLocation.percentage}%
                   </h3>
                 </div>
