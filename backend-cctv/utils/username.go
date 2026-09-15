@@ -34,6 +34,9 @@ func GenerateUsername(role string, fullname string) string {
 	case "Petugas HSE":
 		prefix="HSE"
 
+	case "Petugas GSL":
+		prefix="GSL"
+
 	}
 
 

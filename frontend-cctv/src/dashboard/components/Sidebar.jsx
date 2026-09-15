@@ -23,6 +23,10 @@ import {
   FaClock,
   FaCameraRetro,
   FaCogs,
+  FaTachometerAlt,
+  FaClipboardList,
+  FaBoxOpen,
+  FaUserFriends,
 } from 'react-icons/fa';
 
 import Logo from '../assets/images/logo.png';
@@ -35,6 +39,7 @@ export default function Sidebar({ onClose }) {
   const [dashboardOpen, setDashboardOpen] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
   const [performanceOpen, setPerformanceOpen] = useState(false);
+  const [complaintOpen, setComplaintOpen] = useState(false);
 
   const isActive = (path) => {
     return location.pathname === path;
@@ -54,10 +59,16 @@ export default function Sidebar({ onClose }) {
     (path) => location.pathname.startsWith(path)
   );
 
+  const isComplaintActive = ['/komplain-gsl', '/kategori-komplain', '/petugas-gsl'].some((path) =>
+    location.pathname.startsWith(path)
+  );
+
   useEffect(() => {
     setDashboardOpen(isDashboardActive);
 
     setFormOpen(isFormActive);
+
+    setComplaintOpen(isComplaintActive);
 
     if (
       location.pathname.startsWith('/camera-occupancy') ||
@@ -121,6 +132,8 @@ export default function Sidebar({ onClose }) {
   const isAdmin = role === 'Admin';
 
   const canViewUser = isAdmin;
+
+  const isGSLOnly = role === 'Petugas GSL';
 
   return (
     <div
@@ -203,126 +216,198 @@ export default function Sidebar({ onClose }) {
           Menu Utama
         </p>
 
-        {/* DASHBOARD */}
-        <MenuButton
-          icon={<FaHome size={15} />}
-          title="Dashboard"
-          active={isDashboardActive}
-          open={dashboardOpen}
-          onClick={() => setDashboardOpen(!dashboardOpen)}
-        />
-
-        {dashboardOpen && (
-          <div className="ml-3 pl-3 border-l border-slate-100 space-y-0.5 py-1">
-            <SidebarLink
-              to="/id-cctv"
-              label="ID CCTV"
-              icon={<FaVideo size={13} />}
-              active={isActive('/id-cctv')}
-            />
-
-            <SidebarLink
-              to="/petugas"
-              label="Petugas CCTV"
-              icon={<FaUserTie size={13} />}
-              active={isActive('/petugas')}
-            />
-
-            {canViewUser && (
-              <SidebarLink
-                to="/user"
-                label="User"
-                icon={<FaUserCog size={13} />}
-                active={isActive('/user')}
-              />
-            )}
-
-            <SidebarLink
-              to="/data-lokasi"
-              label="Data Lokasi"
-              icon={<FaMapMarkedAlt size={13} />}
-              active={isActive('/data-lokasi')}
-            />
-
-            <SidebarLink
-              to="/kategori"
-              label="Kategori"
-              icon={<FaTags size={13} />}
-              active={isActive('/kategori')}
-            />
-          </div>
+        {/* DASHBOARD UTAMA — link langsung, bukan dropdown */}
+        {!isGSLOnly && (
+          <Link
+            to="/dashboard"
+            className={`
+            w-full
+            flex
+            items-center
+            gap-3
+            px-3
+            py-2.5
+            rounded-xl
+            transition-colors
+            duration-200
+            ${isActive('/dashboard') ? 'bg-blue-50 text-blue-600' : 'text-slate-600 hover:bg-slate-50'}
+          `}
+          >
+            <span
+              className={`w-5 shrink-0 flex items-center justify-center ${isActive('/dashboard') ? 'text-blue-600' : 'text-slate-400'}`}
+            >
+              <FaTachometerAlt size={15} />
+            </span>
+            <span className="text-sm font-semibold">Dashboard Utama</span>
+          </Link>
         )}
 
-        <div className="pt-2" />
+        {!isGSLOnly && <div className="pt-2" />}
 
-        {/* FORMULIR */}
-        <MenuButton
-          icon={<FaWpforms size={15} />}
-          title="Formulir"
-          active={isFormActive}
-          open={formOpen}
-          onClick={() => setFormOpen(!formOpen)}
-        />
-
-        {formOpen && (
-          <div className="ml-3 pl-3 border-l border-slate-100 space-y-0.5 py-1">
-            <SidebarLink
-              to="/list-camera-trouble"
-              label="Gangguan Kamera"
-              icon={<FaExclamationTriangle size={13} />}
-              active={isActive('/list-camera-trouble')}
-            />
-
-            <SidebarLink
-              to="/incident-record"
-              label="Catatan Insiden"
-              icon={<FaClipboardCheck size={13} />}
-              active={isActive('/incident-record')}
-            />
-
+        {/* MASTER CCTV (sebelumnya berlabel "Dashboard") */}
+        {!isGSLOnly && (
+          <>
             <MenuButton
-              icon={<FaChartLine size={14} />}
-              title="Performa CCTV"
-              active={
-                location.pathname.includes('camera-occupancy') ||
-                location.pathname.includes('recording-duration') ||
-                location.pathname.includes('service-performance')
-              }
-              open={performanceOpen}
-              onClick={() => setPerformanceOpen(!performanceOpen)}
-              nested
+              icon={<FaHome size={15} />}
+              title="Master CCTV"
+              active={isDashboardActive}
+              open={dashboardOpen}
+              onClick={() => setDashboardOpen(!dashboardOpen)}
             />
 
-            {performanceOpen && (
+            {dashboardOpen && (
               <div className="ml-3 pl-3 border-l border-slate-100 space-y-0.5 py-1">
                 <SidebarLink
-                  to="/camera-occupancy"
-                  label="Okupansi Kamera"
-                  icon={<FaCamera size={13} />}
-                  active={isActive('/camera-occupancy')}
+                  to="/id-cctv"
+                  label="ID CCTV"
+                  icon={<FaVideo size={13} />}
+                  active={isActive('/id-cctv')}
                 />
 
                 <SidebarLink
-                  to="/recording-duration"
-                  label="Durasi Rekaman"
-                  icon={<FaClock size={13} />}
-                  active={isActive('/recording-duration')}
+                  to="/petugas"
+                  label="Petugas CCTV"
+                  icon={<FaUserTie size={13} />}
+                  active={isActive('/petugas')}
+                />
+
+                {canViewUser && (
+                  <SidebarLink
+                    to="/user"
+                    label="User"
+                    icon={<FaUserCog size={13} />}
+                    active={isActive('/user')}
+                  />
+                )}
+
+                <SidebarLink
+                  to="/data-lokasi"
+                  label="Data Lokasi"
+                  icon={<FaMapMarkedAlt size={13} />}
+                  active={isActive('/data-lokasi')}
                 />
 
                 <SidebarLink
-                  to="/service-performance"
-                  label="Performa Service"
-                  icon={<FaCogs size={13} />}
-                  active={isActive('/service-performance')}
+                  to="/kategori"
+                  label="Kategori"
+                  icon={<FaTags size={13} />}
+                  active={isActive('/kategori')}
                 />
               </div>
             )}
+          </>
+        )}
+
+        {!isGSLOnly && <div className="pt-2" />}
+
+        {/* FORMULIR */}
+        {!isGSLOnly && (
+          <>
+            <MenuButton
+              icon={<FaWpforms size={15} />}
+              title="Formulir"
+              active={isFormActive}
+              open={formOpen}
+              onClick={() => setFormOpen(!formOpen)}
+            />
+
+            {formOpen && (
+              <div className="ml-3 pl-3 border-l border-slate-100 space-y-0.5 py-1">
+                <SidebarLink
+                  to="/list-camera-trouble"
+                  label="Gangguan Kamera"
+                  icon={<FaExclamationTriangle size={13} />}
+                  active={isActive('/list-camera-trouble')}
+                />
+
+                <SidebarLink
+                  to="/incident-record"
+                  label="Catatan Insiden"
+                  icon={<FaClipboardCheck size={13} />}
+                  active={isActive('/incident-record')}
+                />
+
+                <MenuButton
+                  icon={<FaChartLine size={14} />}
+                  title="Performa CCTV"
+                  active={
+                    location.pathname.includes('camera-occupancy') ||
+                    location.pathname.includes('recording-duration') ||
+                    location.pathname.includes('service-performance')
+                  }
+                  open={performanceOpen}
+                  onClick={() => setPerformanceOpen(!performanceOpen)}
+                  nested
+                />
+
+                {performanceOpen && (
+                  <div className="ml-3 pl-3 border-l border-slate-100 space-y-0.5 py-1">
+                    <SidebarLink
+                      to="/camera-occupancy"
+                      label="Okupansi Kamera"
+                      icon={<FaCamera size={13} />}
+                      active={isActive('/camera-occupancy')}
+                    />
+
+                    <SidebarLink
+                      to="/recording-duration"
+                      label="Durasi Rekaman"
+                      icon={<FaClock size={13} />}
+                      active={isActive('/recording-duration')}
+                    />
+
+                    <SidebarLink
+                      to="/service-performance"
+                      label="Performa Service"
+                      icon={<FaCogs size={13} />}
+                      active={isActive('/service-performance')}
+                    />
+                  </div>
+                )}
+
+                <SidebarLink
+                  to="/summary-request-camera"
+                  label="Request Kamera"
+                  icon={<FaCameraRetro size={13} />}
+                  active={isActive('/summary-request-camera')}
+                />
+              </div>
+            )}
+          </>
+        )}
+
+        {!isGSLOnly && <div className="pt-2" />}
+
+        {/* KOMPLAIN GSL — BARU */}
+        <MenuButton
+          icon={<FaClipboardList size={15} />}
+          title="Komplain GSL"
+          active={isComplaintActive}
+          open={complaintOpen}
+          onClick={() => setComplaintOpen(!complaintOpen)}
+        />
+
+        {complaintOpen && (
+          <div className="ml-3 pl-3 border-l border-slate-100 space-y-0.5 py-1">
+            <SidebarLink
+              to="/komplain-gsl"
+              label="Data Komplain"
+              icon={<FaBoxOpen size={13} />}
+              active={isActive('/komplain-gsl')}
+            />
 
             <SidebarLink
-              to="/summary-request-camera"
-              label="Request Kamera"
-              icon={<FaCameraRetro size={13} />}
-              active={isActive('/summary-request-camera')}
+              to="/kategori-komplain"
+              label="Kategori Komplain"
+              icon={<FaTags size={13} />}
+              active={isActive('/kategori-komplain')}
+            />
+
+            <SidebarLink
+              to="/petugas-gsl"
+              label="Petugas GSL"
+              icon={<FaUserFriends size={13} />}
+              active={isActive('/petugas-gsl')}
             />
           </div>
         )}

@@ -1380,7 +1380,7 @@ export default function IncidentRecord() {
         </Swiper>
         {showLocationAnalysis && (
           <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-200"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-2 sm:p-4 md:p-6 animate-in fade-in duration-200"
             onClick={() => setShowLocationAnalysis(false)}
           >
             <div
@@ -1644,7 +1644,7 @@ export default function IncidentRecord() {
 
         {showCategoryAnalysis && (
           <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-200"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-2 sm:p-4 md:p-6 animate-in fade-in duration-200"
             onClick={() => setShowCategoryAnalysis(false)}
           >
             <div
@@ -2061,7 +2061,7 @@ export default function IncidentRecord() {
     items-center
     justify-center
     z-[999]
-    p-6
+    p-2 sm:p-4 md:p-6
     overflow-y-auto
     "
             onClick={() => setShowForm(false)}
@@ -2071,13 +2071,13 @@ export default function IncidentRecord() {
               className="
       bg-white/90
       backdrop-blur-3xl
-      rounded-[40px]
+      rounded-2xl md:rounded-[40px]
       shadow-[0_40px_100px_rgba(0,0,0,.2)]
       w-full
       max-w-5xl
-      max-h-[90vh]
+      max-h-[95vh] md:max-h-[90vh]
       overflow-y-auto
-      p-10
+      p-4 sm:p-6 md:p-10
       "
             >
               {/* HEADER */}
@@ -2085,8 +2085,11 @@ export default function IncidentRecord() {
               <div
                 className="
         flex
+        flex-col
+        sm:flex-row
         justify-between
         items-start
+        gap-4
         mb-8
         "
               >
@@ -2105,7 +2108,8 @@ export default function IncidentRecord() {
 
                   <h2
                     className="
-            text-3xl
+            text-2xl
+            md:text-3xl
             font-bold
             text-gray-800
             mt-3
@@ -2148,6 +2152,7 @@ export default function IncidentRecord() {
           hover:text-white
           text-2xl
           duration-300
+          shrink-0
           flex
           items-center
           justify-center
@@ -2375,6 +2380,8 @@ export default function IncidentRecord() {
                   className="
           md:col-span-2
           flex
+          flex-col-reverse
+          sm:flex-row
           justify-end
           gap-3
           mt-6
@@ -2384,6 +2391,8 @@ export default function IncidentRecord() {
                     type="button"
                     onClick={() => setShowForm(false)}
                     className="
+            w-full
+            sm:w-auto
             px-6
             py-3
             rounded-2xl
@@ -2398,6 +2407,8 @@ export default function IncidentRecord() {
                   <button
                     type="submit"
                     className="
+            w-full
+            sm:w-auto
             px-8
             py-3
             rounded-2xl

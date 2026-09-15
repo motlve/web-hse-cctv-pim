@@ -312,7 +312,7 @@ export default function UserManagement() {
 
     emailRegistered: userList.filter((u) => u.email).length,
 
-    roleDistribution: ['Admin', 'Manager HSE', 'Petugas CCTV', 'Petugas HSE', 'Guest'].map(
+    roleDistribution: ['Admin', 'Manager HSE', 'Petugas CCTV', 'Petugas HSE', 'Petugas GSL', 'Guest'].map(
       (role) => ({
         role,
         total: userList.filter((u) => u.role === role).length,
@@ -345,7 +345,7 @@ export default function UserManagement() {
       {
         label: 'Jumlah User',
         data: userAnalytics.roleDistribution.map((item) => item.total),
-        backgroundColor: ['#ef4444', '#f59e0b', '#3b82f6', '#22c55e', '#6b7280'],
+        backgroundColor: ['#ef4444', '#f59e0b', '#3b82f6', '#22c55e', '#a855f7', '#6b7280'],
         borderRadius: 10,
         borderSkipped: false,
         barThickness: 35,
@@ -357,7 +357,7 @@ export default function UserManagement() {
     <Layout>
       {/* ================= USER ANALYTICS CHART ================= */}
 
-      <section className="p-4 grid grid-cols-2 gap-6">
+      <section className="p-4 grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* ROLE DISTRIBUTION */}
         <div className="bg-white/70 backdrop-blur-md rounded-3xl shadow-lg border border-white/40 p-6">
           <div className="flex items-center gap-3 mb-5">
@@ -636,7 +636,7 @@ export default function UserManagement() {
               items-center
               justify-center
               z-[999]
-              p-6
+              p-2 sm:p-4 md:p-6
               overflow-y-auto
             "
             onClick={() => setShowForm(false)}
@@ -646,24 +646,24 @@ export default function UserManagement() {
               className="
                 bg-white/90
                 backdrop-blur-3xl
-                rounded-[40px]
+                rounded-2xl md:rounded-[40px]
                 shadow-[0_40px_100px_rgba(0,0,0,.2)]
                 w-full
                 max-w-3xl
-                max-h-[90vh]
+                max-h-[95vh] md:max-h-[90vh]
                 overflow-y-auto
-                p-10
+                p-4 sm:p-6 md:p-10
               "
             >
               {/* HEADER */}
 
-              <div className="flex justify-between items-start mb-8">
+              <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-8">
                 <div>
                   <p className="uppercase tracking-[5px] text-blue-600 text-xs font-semibold">
                     MANAJEMEN PENGGUNA
                   </p>
 
-                  <h2 className="text-3xl font-bold text-gray-800 mt-3">
+                  <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mt-3">
                     {isEdit ? '✏️ Edit Pengguna' : '👤 Tambah Pengguna Baru'}
                   </h2>
 
@@ -681,6 +681,7 @@ export default function UserManagement() {
                     hover:text-white
                     text-2xl
                     duration-300
+                    shrink-0
                   "
                 >
                   ×
@@ -762,17 +763,18 @@ export default function UserManagement() {
                     <option>Manager HSE</option>
                     <option>Petugas CCTV</option>
                     <option>Petugas HSE</option>
+                    <option>Petugas GSL</option>
                     <option>Guest</option>
                   </select>
                 </div>
 
                 {/* BUTTON */}
 
-                <div className="md:col-span-2 flex justify-end gap-3 mt-6">
+                <div className="md:col-span-2 flex flex-col-reverse sm:flex-row justify-end gap-3 mt-6">
                   <button
                     type="button"
                     onClick={() => setShowForm(false)}
-                    className="px-6 py-3 rounded-2xl bg-gray-100 hover:bg-gray-200 duration-300"
+                    className="w-full sm:w-auto px-6 py-3 rounded-2xl bg-gray-100 hover:bg-gray-200 duration-300"
                   >
                     Batal
                   </button>
@@ -780,6 +782,8 @@ export default function UserManagement() {
                   <button
                     type="submit"
                     className="
+                      w-full
+                      sm:w-auto
                       px-8
                       py-3
                       rounded-2xl
@@ -876,6 +880,7 @@ export default function UserManagement() {
                           'Manager HSE': 'bg-yellow-100 text-yellow-700 border-yellow-200',
                           'Petugas CCTV': 'bg-blue-100 text-blue-700 border-blue-200',
                           'Petugas HSE': 'bg-green-100 text-green-700 border-green-200',
+                          'Petugas GSL': 'bg-purple-100 text-purple-700 border-purple-200',
                           Guest: 'bg-gray-100 text-gray-700 border-gray-300',
                         };
 
@@ -884,6 +889,7 @@ export default function UserManagement() {
                           'Manager HSE': '🦺',
                           'Petugas CCTV': '📹',
                           'Petugas HSE': '🛡️',
+                          'Petugas GSL': '🧰',
                           Guest: '👤',
                         };
 

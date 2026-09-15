@@ -1,4 +1,5 @@
 import { createElement, useState, useEffect, useMemo, useCallback } from 'react';
+
 import {
   CalendarClock,
   GraduationCap,
@@ -18,8 +19,12 @@ import {
   Star,
 } from 'lucide-react';
 
-// TODO: ganti "image" dengan URL foto asli kegiatan (dokumentasi pelatihan, drill, dll).
-// Selama masih placeholder, dipakai foto stok bertema dari picsum.photos (konsisten per program lewat seed).
+import { AnimatePresence, motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
+
+/* ============================================================
+   PROGRAM DATA
+============================================================ */
+
 const PROGRAMS = [
   {
     icon: GraduationCap,
@@ -84,18 +89,37 @@ const PROGRAMS = [
   },
 ];
 
+/* ============================================================
+   REDUCED MOTION
+============================================================ */
+
 function usePrefersReducedMotion() {
   const [reduced, setReduced] = useState(false);
+
   useEffect(() => {
     const mq = window.matchMedia?.('(prefers-reduced-motion: reduce)');
+
     if (!mq) return;
+
     setReduced(mq.matches);
-    const handler = (e) => setReduced(e.matches);
+
+    const handler = (event) => {
+      setReduced(event.matches);
+    };
+
     mq.addEventListener?.('change', handler);
-    return () => mq.removeEventListener?.('change', handler);
+
+    return () => {
+      mq.removeEventListener?.('change', handler);
+    };
   }, []);
+
   return reduced;
 }
+
+/* ============================================================
+   FREQUENCY BADGE
+============================================================ */
 
 function FrequencyBadge({ children, solid = false }) {
   return (
@@ -111,40 +135,58 @@ function FrequencyBadge({ children, solid = false }) {
   );
 }
 
-// ── PROGRAM TICKER ─────────────────────────────────────────────
-// Elemen signature baru: strip berjalan (marquee) yang menampilkan
-// ritme seluruh program secara berurutan — visualisasi langsung dari
-// kata "berkelanjutan" di body text, bukan sekadar klaim. Berhenti
-// saat disentuh/di-hover supaya tetap terbaca, dan diam total jika
-// pengguna memilih reduced motion.
+/* ============================================================
+   PROGRAM TICKER
+============================================================ */
+
 function ProgramTicker({ programs, reduced }) {
   const [paused, setPaused] = useState(false);
+
   const items = [...programs, ...programs];
 
   return (
     <div
       className="relative mt-8 overflow-hidden rounded-2xl"
-      style={{ backgroundColor: '#6B1414' }}
+      style={{
+        backgroundColor: '#6B1414',
+      }}
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       onFocus={() => setPaused(true)}
       onBlur={() => setPaused(false)}
     >
-      <style>{`
-        @keyframes hse-ticker-scroll {
-          from { transform: translateX(0); }
-          to { transform: translateX(-50%); }
-        }
-      `}</style>
+      <style>
+        {`
+          @keyframes hse-ticker-scroll {
+            from {
+              transform: translateX(0);
+            }
+
+            to {
+              transform: translateX(-50%);
+            }
+          }
+        `}
+      </style>
 
       <div
         className="flex items-center gap-2 px-4 pt-2.5 pb-2 border-b"
-        style={{ borderColor: 'rgba(232,163,61,0.18)' }}
+        style={{
+          borderColor: 'rgba(232,163,61,0.18)',
+        }}
       >
-        <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: '#E8A33D' }} />
+        <span
+          className="h-1.5 w-1.5 rounded-full"
+          style={{
+            backgroundColor: '#E8A33D',
+          }}
+        />
+
         <span
           className="text-[10px] font-mono uppercase tracking-[0.14em]"
-          style={{ color: '#E8A33D' }}
+          style={{
+            color: '#E8A33D',
+          }}
         >
           Ritme Program Berjalan
         </span>
@@ -159,17 +201,40 @@ function ProgramTicker({ programs, reduced }) {
             animationPlayState: paused ? 'paused' : 'running',
           }}
         >
-          {items.map((p, i) => (
+          {items.map((program, index) => (
             <div
-              key={`${p.title}-${i}`}
+              key={`${program.title}-${index}`}
               className="inline-flex items-center gap-2 text-[12.5px]"
-              style={{ color: '#F0DFC0' }}
-              aria-hidden={i >= programs.length ? 'true' : undefined}
+              style={{
+                color: '#F0DFC0',
+              }}
+              aria-hidden={index >= programs.length ? 'true' : undefined}
             >
-              {createElement(p.icon, { size: 13, strokeWidth: 2, style: { color: '#E8A33D' } })}
-              {p.title}
-              <span style={{ color: '#C79289' }}>·</span>
-              <span style={{ color: '#E8A33D' }}>{p.frequency}</span>
+              {createElement(program.icon, {
+                size: 13,
+                strokeWidth: 2,
+                style: {
+                  color: '#E8A33D',
+                },
+              })}
+
+              {program.title}
+
+              <span
+                style={{
+                  color: '#C79289',
+                }}
+              >
+                ·
+              </span>
+
+              <span
+                style={{
+                  color: '#E8A33D',
+                }}
+              >
+                {program.frequency}
+              </span>
             </div>
           ))}
         </div>
@@ -178,10 +243,186 @@ function ProgramTicker({ programs, reduced }) {
   );
 }
 
-// ── PROGRAM CARD ───────────────────────────────────────────────
-// Komponen tersendiri (bukan inline di dalam .map()) supaya boleh
-// punya state sendiri (status loading gambar) tanpa melanggar
-// Rules of Hooks.
+/* ============================================================
+   INFINITE IMAGE ANIMATION
+============================================================ */
+
+/*
+  Animasi utama untuk kartu program.
+
+  Efek:
+  - image bergerak perlahan infinite
+  - floating
+  - zoom saat hover
+  - tilt mengikuti mouse
+  - overlay bergerak
+  - shine effect
+*/
+
+function InfiniteProgramVisual({ program, loaded, setLoaded, reduced }) {
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+
+  const rotateX = useSpring(useTransform(mouseY, [-0.5, 0.5], [5, -5]), {
+    stiffness: 180,
+    damping: 20,
+  });
+
+  const rotateY = useSpring(useTransform(mouseX, [-0.5, 0.5], [-5, 5]), {
+    stiffness: 180,
+    damping: 20,
+  });
+
+  const handleMouseMove = (event) => {
+    if (reduced) return;
+
+    const rect = event.currentTarget.getBoundingClientRect();
+
+    const x = (event.clientX - rect.left) / rect.width - 0.5;
+
+    const y = (event.clientY - rect.top) / rect.height - 0.5;
+
+    mouseX.set(x);
+    mouseY.set(y);
+  };
+
+  const handleMouseLeave = () => {
+    mouseX.set(0);
+    mouseY.set(0);
+  };
+
+  return (
+    <motion.div
+      className="absolute inset-0 overflow-hidden"
+      style={{
+        rotateX,
+        rotateY,
+        transformPerspective: 1000,
+      }}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+    >
+      {/* Skeleton */}
+
+      <div
+        className="absolute inset-0 z-20 transition-opacity duration-500"
+        style={{
+          opacity: loaded ? 0 : 1,
+          pointerEvents: 'none',
+          background: 'linear-gradient(100deg, #EFE8DA 30%, #F7F2E8 45%, #EFE8DA 60%)',
+          backgroundSize: '200% 100%',
+          animation: loaded ? 'none' : 'hse-shimmer 1.4s ease-in-out infinite',
+        }}
+      />
+
+      {/* Animated Image */}
+
+      <motion.img
+        src={program.image}
+        alt={program.title}
+        onLoad={() => setLoaded(true)}
+        loading="lazy"
+        className="absolute inset-0 h-full w-full object-cover"
+        initial={{
+          scale: 1.08,
+          opacity: 0,
+        }}
+        animate={
+          loaded
+            ? reduced
+              ? {
+                  scale: 1,
+                  opacity: 1,
+                }
+              : {
+                  scale: [1.06, 1.13, 1.06],
+                  opacity: 1,
+                }
+            : {
+                scale: 1.08,
+                opacity: 0,
+              }
+        }
+        transition={
+          reduced
+            ? {
+                duration: 0.4,
+              }
+            : {
+                scale: {
+                  duration: 18,
+                  repeat: Infinity,
+                  ease: 'easeInOut',
+                },
+                opacity: {
+                  duration: 0.6,
+                },
+              }
+        }
+      />
+
+      {/* Moving gradient */}
+
+      <motion.div
+        className="absolute inset-0 pointer-events-none"
+        animate={
+          reduced
+            ? undefined
+            : {
+                backgroundPosition: ['0% 0%', '100% 100%', '0% 0%'],
+              }
+        }
+        transition={{
+          duration: 12,
+          repeat: Infinity,
+          ease: 'linear',
+        }}
+        style={{
+          background:
+            'linear-gradient(120deg, rgba(107,20,20,0.08), transparent 35%, rgba(232,163,61,0.12), transparent 70%)',
+          backgroundSize: '200% 200%',
+          mixBlendMode: 'screen',
+        }}
+      />
+
+      {/* Main dark overlay */}
+
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background:
+            'linear-gradient(to top, rgba(20,12,10,0.94) 0%, rgba(20,12,10,0.5) 45%, rgba(20,12,10,0.04) 78%)',
+        }}
+      />
+
+      {/* Infinite shine */}
+
+      {!reduced && (
+        <motion.div
+          className="absolute inset-y-0 -left-[70%] w-[45%] pointer-events-none"
+          animate={{
+            left: ['-70%', '140%'],
+          }}
+          transition={{
+            duration: 7,
+            repeat: Infinity,
+            repeatDelay: 3,
+            ease: 'easeInOut',
+          }}
+          style={{
+            background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent)',
+            transform: 'skewX(-18deg)',
+          }}
+        />
+      )}
+    </motion.div>
+  );
+}
+
+/* ============================================================
+   PROGRAM CARD
+============================================================ */
+
 function ProgramCard({
   program,
   isFeatured,
@@ -190,82 +431,137 @@ function ProgramCard({
   isFavorite,
   onToggleFavorite,
   onSelect,
+  reduced,
 }) {
   const [loaded, setLoaded] = useState(false);
-  const { icon: Icon, title, desc, frequency, image, durasi, lokasi } = program;
+
+  const { icon: Icon, title, desc, frequency, durasi, lokasi } = program;
 
   return (
-    <button
+    <motion.button
+      type="button"
       onClick={onSelect}
-      className={`group relative text-left rounded-3xl overflow-hidden transition-all duration-500 ease-out hover:-translate-y-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 ${
-        isFeatured ? 'sm:col-span-2 lg:col-span-2 lg:row-span-2' : ''
-      }`}
-      style={{
-        boxShadow: '0 1px 3px rgba(43,35,32,0.06)',
-        transitionDelay: entered ? `${index * 60}ms` : '0ms',
+      initial={
+        reduced
+          ? false
+          : {
+              opacity: 0,
+              y: 30,
+              scale: 0.97,
+            }
+      }
+      animate={{
         opacity: entered ? 1 : 0,
-        transform: entered ? 'translateY(0) scale(1)' : 'translateY(14px) scale(0.98)',
+        y: entered ? 0 : 30,
+        scale: entered ? 1 : 0.97,
+      }}
+      transition={{
+        duration: 0.55,
+        delay: reduced ? 0 : index * 0.07,
+        ease: [0.22, 1, 0.36, 1],
+      }}
+      whileHover={
+        reduced
+          ? undefined
+          : {
+              y: -8,
+              scale: 1.015,
+            }
+      }
+      whileTap={{
+        scale: 0.985,
+      }}
+      className={`
+        group relative text-left rounded-3xl overflow-hidden
+        focus-visible:outline
+        focus-visible:outline-2
+        focus-visible:outline-offset-2
+        ${isFeatured ? 'sm:col-span-2 lg:col-span-2 lg:row-span-2' : ''}
+      `}
+      style={{
+        minHeight: isFeatured ? undefined : '22rem',
+        boxShadow: '0 1px 3px rgba(43,35,32,0.06), 0 12px 30px rgba(43,35,32,0.04)',
         outlineColor: '#E8A33D',
+        transformStyle: 'preserve-3d',
       }}
     >
-      <div className={`relative w-full ${isFeatured ? 'h-72 sm:h-full sm:min-h-[22rem]' : 'h-56'}`}>
-        {/* Skeleton shimmer — tampil sampai foto selesai dimuat */}
-        <div
-          className="absolute inset-0 transition-opacity duration-300"
-          style={{
-            opacity: loaded ? 0 : 1,
-            background: 'linear-gradient(100deg, #EFE8DA 30%, #F7F2E8 45%, #EFE8DA 60%)',
-            backgroundSize: '200% 100%',
-            animation: loaded ? 'none' : 'hse-shimmer 1.4s ease-in-out infinite',
-          }}
+      <div
+        className={`
+          relative w-full
+          ${isFeatured ? 'h-72 sm:h-full sm:min-h-[22rem]' : 'h-56 sm:h-72'}
+        `}
+      >
+        {/* =========================================
+            INFINITE ANIMATED IMAGE
+        ========================================= */}
+
+        <InfiniteProgramVisual
+          program={program}
+          loaded={loaded}
+          setLoaded={setLoaded}
+          reduced={reduced}
         />
 
-        <img
-          src={image}
-          alt={title}
-          onLoad={() => setLoaded(true)}
-          className="absolute inset-0 h-full w-full object-cover transition-all duration-700 ease-out group-hover:scale-110"
-          style={{ opacity: loaded ? 1 : 0 }}
-          loading="lazy"
-        />
-        <div
-          className="absolute inset-0"
-          style={{
-            background:
-              'linear-gradient(to top, rgba(20,12,10,0.92) 0%, rgba(20,12,10,0.45) 45%, rgba(20,12,10,0.05) 75%)',
-          }}
-        />
+        {/* =========================================
+            CONTENT
+        ========================================= */}
 
-        <div className="absolute inset-0 flex flex-col justify-between p-5">
+        <div className="absolute inset-0 flex flex-col justify-between p-5 z-10">
+          {/* TOP */}
+
           <div className="flex items-center justify-between">
-            <div
-              className="flex h-9 w-9 items-center justify-center rounded-full transition-transform duration-300 group-hover:scale-110"
+            <motion.div
+              className="flex h-9 w-9 items-center justify-center rounded-full"
+              whileHover={
+                reduced
+                  ? undefined
+                  : {
+                      scale: 1.12,
+                      rotate: 5,
+                    }
+              }
               style={{
                 backgroundColor: 'rgba(250,248,243,0.15)',
                 backdropFilter: 'blur(6px)',
               }}
             >
-              {createElement(Icon, { size: 16, strokeWidth: 2, style: { color: '#FAF8F3' } })}
-            </div>
+              {createElement(Icon, {
+                size: 16,
+                strokeWidth: 2,
+                style: {
+                  color: '#FAF8F3',
+                },
+              })}
+            </motion.div>
 
             <div className="flex items-center gap-2">
+              {/* FAVORITE */}
+
               <span
                 role="button"
                 tabIndex={0}
-                onClick={(e) => {
-                  e.stopPropagation();
+                onClick={(event) => {
+                  event.stopPropagation();
                   onToggleFavorite(title);
                 }}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    e.stopPropagation();
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    event.stopPropagation();
                     onToggleFavorite(title);
                   }
                 }}
                 aria-label={isFavorite ? 'Hapus dari favorit' : 'Tandai sebagai favorit'}
                 aria-pressed={isFavorite}
-                className="flex h-7 w-7 items-center justify-center rounded-full transition-transform duration-200 hover:scale-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+                className="
+                  flex h-7 w-7 items-center
+                  justify-center rounded-full
+                  transition-transform duration-200
+                  hover:scale-110
+                  focus-visible:outline
+                  focus-visible:outline-2
+                  focus-visible:outline-offset-2
+                "
                 style={{
                   backgroundColor: 'rgba(20,12,10,0.35)',
                   backdropFilter: 'blur(4px)',
@@ -281,44 +577,92 @@ function ProgramCard({
                   },
                 })}
               </span>
+
               <FrequencyBadge>{frequency}</FrequencyBadge>
             </div>
           </div>
 
+          {/* BOTTOM */}
+
           <div>
             <p
-              className={`font-semibold leading-snug ${isFeatured ? 'text-xl sm:text-2xl' : 'text-base'}`}
-              style={{ color: '#FAF8F3' }}
+              className={`
+                font-semibold leading-snug
+                ${isFeatured ? 'text-xl sm:text-2xl' : 'text-base'}
+              `}
+              style={{
+                color: '#FAF8F3',
+              }}
             >
               {title}
             </p>
+
             <p
-              className={`mt-2 leading-relaxed text-[#E8DCCF] ${
-                isFeatured ? 'text-[13px] max-w-sm' : 'text-[12.5px] line-clamp-2'
-              }`}
-              style={{ opacity: 0.85 }}
+              className={`
+                mt-2 leading-relaxed text-[#E8DCCF]
+                ${isFeatured ? 'text-[13px] max-w-sm' : 'text-[12.5px] line-clamp-2'}
+              `}
+              style={{
+                opacity: 0.85,
+              }}
             >
               {desc}
             </p>
 
-            {/* Quick preview — muncul saat hover/focus, tanpa perlu buka modal */}
-            <div
-              className="mt-3 hidden sm:flex items-center gap-4 text-[11px] opacity-0 -translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300"
-              style={{ color: '#E8DCCF' }}
+            {/* QUICK INFO */}
+
+            <motion.div
+              className="
+                mt-3
+                hidden sm:flex
+                items-center gap-4
+                text-[11px]
+              "
+              initial={{
+                opacity: 0,
+                y: 8,
+              }}
+              whileHover={{
+                opacity: 1,
+              }}
+              animate={{
+                opacity: 0.85,
+                y: 0,
+              }}
+              style={{
+                color: '#E8DCCF',
+              }}
             >
               <span className="inline-flex items-center gap-1">
-                {createElement(Clock3, { size: 11, strokeWidth: 2 })}
+                {createElement(Clock3, {
+                  size: 11,
+                  strokeWidth: 2,
+                })}
                 {durasi}
               </span>
+
               <span className="inline-flex items-center gap-1">
-                {createElement(MapPin, { size: 11, strokeWidth: 2 })}
+                {createElement(MapPin, {
+                  size: 11,
+                  strokeWidth: 2,
+                })}
                 {lokasi}
               </span>
-            </div>
+            </motion.div>
+
+            {/* DETAIL */}
 
             <div
-              className="mt-4 inline-flex items-center gap-1.5 text-[12px] font-medium transition-all duration-300 group-hover:gap-2.5"
-              style={{ color: '#E8A33D' }}
+              className="
+                mt-4 inline-flex
+                items-center gap-1.5
+                text-[12px] font-medium
+                transition-all duration-300
+                group-hover:gap-2.5
+              "
+              style={{
+                color: '#E8A33D',
+              }}
             >
               Lihat detail
               {createElement(isFeatured ? ArrowUpRight : ArrowRight, {
@@ -329,9 +673,13 @@ function ProgramCard({
           </div>
         </div>
       </div>
-    </button>
+    </motion.button>
   );
 }
+
+/* ============================================================
+   PROGRAM MODAL
+============================================================ */
 
 function ProgramModal({
   program,
@@ -347,20 +695,37 @@ function ProgramModal({
 
   const handleClose = useCallback(() => {
     setVisible(false);
-    setTimeout(onClose, 180);
+
+    setTimeout(() => {
+      onClose();
+    }, 180);
   }, [onClose]);
 
   useEffect(() => {
-    const raf = requestAnimationFrame(() => setVisible(true));
-    function onKeyDown(e) {
-      if (e.key === 'Escape') handleClose();
-      if (e.key === 'ArrowRight' && total > 1) onNext();
-      if (e.key === 'ArrowLeft' && total > 1) onPrev();
+    const raf = requestAnimationFrame(() => {
+      setVisible(true);
+    });
+
+    function handleKeyDown(event) {
+      if (event.key === 'Escape') {
+        handleClose();
+      }
+
+      if (event.key === 'ArrowRight' && total > 1) {
+        onNext();
+      }
+
+      if (event.key === 'ArrowLeft' && total > 1) {
+        onPrev();
+      }
     }
-    window.addEventListener('keydown', onKeyDown);
+
+    window.addEventListener('keydown', handleKeyDown);
+
     return () => {
       cancelAnimationFrame(raf);
-      window.removeEventListener('keydown', onKeyDown);
+
+      window.removeEventListener('keydown', handleKeyDown);
     };
   }, [handleClose, onNext, onPrev, total]);
 
@@ -368,7 +733,12 @@ function ProgramModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 transition-opacity duration-200"
+      className="
+        fixed inset-0 z-50
+        flex items-center justify-center
+        p-4
+        transition-opacity duration-200
+      "
       style={{
         backgroundColor: 'rgba(20,10,10,0.65)',
         backdropFilter: 'blur(6px)',
@@ -377,24 +747,44 @@ function ProgramModal({
       onClick={handleClose}
     >
       <div
-        className="relative w-full max-w-2xl rounded-3xl overflow-hidden bg-white grid sm:grid-cols-2 transition-all duration-200"
+        className="
+          relative w-full max-w-2xl
+          rounded-3xl overflow-hidden
+          bg-white
+          grid sm:grid-cols-2
+          transition-all duration-200
+        "
         style={{
           border: '1px solid #EAE0D5',
           boxShadow: '0 24px 60px rgba(20,10,10,0.35)',
           opacity: visible ? 1 : 0,
           transform: visible ? 'scale(1) translateY(0)' : 'scale(0.96) translateY(8px)',
         }}
-        onClick={(e) => e.stopPropagation()}
+        onClick={(event) => {
+          event.stopPropagation();
+        }}
       >
-        {/* Image side */}
-        <div className="relative h-56 sm:h-full">
-          <img
+        {/* IMAGE */}
+
+        <div className="relative h-56 sm:h-full overflow-hidden">
+          <motion.img
             key={program.title}
             src={program.image}
             alt={program.title}
             className="h-full w-full object-cover"
-            style={{ animation: 'hse-fade-in 250ms ease-out' }}
+            initial={{
+              scale: 1.05,
+              opacity: 0,
+            }}
+            animate={{
+              scale: 1,
+              opacity: 1,
+            }}
+            transition={{
+              duration: 0.45,
+            }}
           />
+
           <div
             className="absolute inset-0"
             style={{
@@ -402,24 +792,47 @@ function ProgramModal({
                 'linear-gradient(to top, rgba(43,35,32,0.5), transparent 45%), linear-gradient(to right, transparent 60%, rgba(43,35,32,0.15))',
             }}
           />
+
+          {/* BADGE */}
+
           <div className="absolute top-4 left-4 flex items-center gap-2">
             <FrequencyBadge solid>{program.frequency}</FrequencyBadge>
+
             {total > 1 && (
               <span
-                className="text-[10px] font-medium px-2 py-1 rounded-full"
-                style={{ backgroundColor: 'rgba(250,248,243,0.85)', color: '#4A2E0A' }}
+                className="
+                  text-[10px] font-medium
+                  px-2 py-1 rounded-full
+                "
+                style={{
+                  backgroundColor: 'rgba(250,248,243,0.85)',
+                  color: '#4A2E0A',
+                }}
               >
                 {position} / {total}
               </span>
             )}
           </div>
 
+          {/* FAVORITE */}
+
           <button
+            type="button"
             onClick={() => onToggleFavorite(program.title)}
             aria-label={isFavorite ? 'Hapus dari favorit' : 'Tandai sebagai favorit'}
             aria-pressed={isFavorite}
-            className="absolute top-4 right-4 flex h-8 w-8 items-center justify-center rounded-full transition-transform duration-200 hover:scale-110"
-            style={{ backgroundColor: 'rgba(20,12,10,0.4)', backdropFilter: 'blur(4px)' }}
+            className="
+              absolute top-4 right-4
+              flex h-8 w-8
+              items-center justify-center
+              rounded-full
+              transition-transform duration-200
+              hover:scale-110
+            "
+            style={{
+              backgroundColor: 'rgba(20,12,10,0.4)',
+              backdropFilter: 'blur(4px)',
+            }}
           >
             {createElement(Star, {
               size: 15,
@@ -431,75 +844,206 @@ function ProgramModal({
             })}
           </button>
 
-          {/* Navigasi program sebelumnya/berikutnya */}
+          {/* PREVIOUS / NEXT */}
+
           {total > 1 && (
             <>
               <button
+                type="button"
                 onClick={onPrev}
                 aria-label="Program sebelumnya"
-                className="absolute left-3 top-1/2 -translate-y-1/2 flex h-8 w-8 items-center justify-center rounded-full transition-colors hover:bg-white/20"
-                style={{ backgroundColor: 'rgba(20,12,10,0.35)', backdropFilter: 'blur(4px)' }}
+                className="
+                  absolute left-3 top-1/2
+                  -translate-y-1/2
+                  flex h-8 w-8
+                  items-center justify-center
+                  rounded-full
+                  transition-colors
+                  hover:bg-white/20
+                "
+                style={{
+                  backgroundColor: 'rgba(20,12,10,0.35)',
+                  backdropFilter: 'blur(4px)',
+                }}
               >
-                {createElement(ChevronLeft, { size: 16, color: '#FAF8F3', strokeWidth: 2.5 })}
+                {createElement(ChevronLeft, {
+                  size: 16,
+                  color: '#FAF8F3',
+                  strokeWidth: 2.5,
+                })}
               </button>
+
               <button
+                type="button"
                 onClick={onNext}
                 aria-label="Program berikutnya"
-                className="absolute right-3 top-1/2 -translate-y-1/2 flex h-8 w-8 items-center justify-center rounded-full transition-colors hover:bg-white/20 sm:right-3"
-                style={{ backgroundColor: 'rgba(20,12,10,0.35)', backdropFilter: 'blur(4px)' }}
+                className="
+                  absolute right-3 top-1/2
+                  -translate-y-1/2
+                  flex h-8 w-8
+                  items-center justify-center
+                  rounded-full
+                  transition-colors
+                  hover:bg-white/20
+                "
+                style={{
+                  backgroundColor: 'rgba(20,12,10,0.35)',
+                  backdropFilter: 'blur(4px)',
+                }}
               >
-                {createElement(ChevronRight, { size: 16, color: '#FAF8F3', strokeWidth: 2.5 })}
+                {createElement(ChevronRight, {
+                  size: 16,
+                  color: '#FAF8F3',
+                  strokeWidth: 2.5,
+                })}
               </button>
             </>
           )}
         </div>
 
-        {/* Content side */}
+        {/* CONTENT */}
+
         <div
           className="p-6 sm:p-7 flex flex-col"
           key={`content-${program.title}`}
-          style={{ animation: 'hse-fade-in 250ms ease-out' }}
+          style={{
+            animation: 'hse-fade-in 250ms ease-out',
+          }}
         >
+          {/* CLOSE */}
+
           <button
+            type="button"
             onClick={handleClose}
             aria-label="Tutup"
-            className="self-end -mt-1 -mr-1 flex h-8 w-8 items-center justify-center rounded-full transition-colors"
-            style={{ backgroundColor: '#F5F0E8', color: '#2B2320' }}
+            className="
+              self-end -mt-1 -mr-1
+              flex h-8 w-8
+              items-center justify-center
+              rounded-full
+              transition-colors
+            "
+            style={{
+              backgroundColor: '#F5F0E8',
+              color: '#2B2320',
+            }}
           >
-            {createElement(X, { size: 15, strokeWidth: 2.5 })}
+            {createElement(X, {
+              size: 15,
+              strokeWidth: 2.5,
+            })}
           </button>
 
+          {/* ICON */}
+
           <div
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl -mt-2"
-            style={{ backgroundColor: 'rgba(107,20,20,0.08)' }}
+            className="
+              flex h-10 w-10
+              shrink-0
+              items-center justify-center
+              rounded-xl -mt-2
+            "
+            style={{
+              backgroundColor: 'rgba(107,20,20,0.08)',
+            }}
           >
-            {createElement(Icon, { size: 18, strokeWidth: 2, style: { color: '#6B1414' } })}
+            {createElement(Icon, {
+              size: 18,
+              strokeWidth: 2,
+              style: {
+                color: '#6B1414',
+              },
+            })}
           </div>
 
-          <p className="mt-4 text-lg font-semibold leading-snug" style={{ color: '#2B2320' }}>
+          {/* TITLE */}
+
+          <p
+            className="
+              mt-4 text-lg
+              font-semibold leading-snug
+            "
+            style={{
+              color: '#2B2320',
+            }}
+          >
             {program.title}
           </p>
-          <p className="mt-2.5 text-[13px] leading-relaxed" style={{ color: '#7A6F63' }}>
+
+          {/* DESCRIPTION */}
+
+          <p
+            className="
+              mt-2.5 text-[13px]
+              leading-relaxed
+            "
+            style={{
+              color: '#7A6F63',
+            }}
+          >
             {program.desc}
           </p>
 
-          <div className="mt-auto pt-6 grid grid-cols-3 gap-3">
+          {/* INFO */}
+
+          <div
+            className="
+              mt-auto pt-6
+              grid grid-cols-3 gap-3
+            "
+          >
             {[
-              { icon: UsersRound, label: 'Peserta', value: program.peserta },
-              { icon: Clock3, label: 'Durasi', value: program.durasi },
-              { icon: MapPin, label: 'Lokasi', value: program.lokasi },
+              {
+                icon: UsersRound,
+                label: 'Peserta',
+                value: program.peserta,
+              },
+              {
+                icon: Clock3,
+                label: 'Durasi',
+                value: program.durasi,
+              },
+              {
+                icon: MapPin,
+                label: 'Lokasi',
+                value: program.lokasi,
+              },
             ].map(({ icon: FIcon, label, value }) => (
-              <div key={label} className="rounded-xl p-3" style={{ backgroundColor: '#FAF8F3' }}>
-                {createElement(FIcon, { size: 13, strokeWidth: 2, style: { color: '#B5791F' } })}
+              <div
+                key={label}
+                className="rounded-xl p-3"
+                style={{
+                  backgroundColor: '#FAF8F3',
+                }}
+              >
+                {createElement(FIcon, {
+                  size: 13,
+                  strokeWidth: 2,
+                  style: {
+                    color: '#B5791F',
+                  },
+                })}
+
                 <p
-                  className="mt-1.5 text-[9.5px] uppercase tracking-[0.08em]"
-                  style={{ color: '#7A6F63' }}
+                  className="
+                      mt-1.5 text-[9.5px]
+                      uppercase tracking-[0.08em]
+                    "
+                  style={{
+                    color: '#7A6F63',
+                  }}
                 >
                   {label}
                 </p>
+
                 <p
-                  className="mt-0.5 text-[12px] font-semibold leading-tight"
-                  style={{ color: '#2B2320' }}
+                  className="
+                      mt-0.5 text-[12px]
+                      font-semibold leading-tight
+                    "
+                  style={{
+                    color: '#2B2320',
+                  }}
                 >
                   {value}
                 </p>
@@ -508,7 +1052,12 @@ function ProgramModal({
           </div>
 
           {total > 1 && (
-            <p className="mt-4 text-[11px]" style={{ color: '#B5A997' }}>
+            <p
+              className="mt-4 text-[11px]"
+              style={{
+                color: '#B5A997',
+              }}
+            >
               Gunakan tombol ← → untuk melihat program lain
             </p>
           )}
@@ -518,140 +1067,312 @@ function ProgramModal({
   );
 }
 
+/* ============================================================
+   MAIN PROGRAM SECTION
+============================================================ */
+
 export default function ProgramSection() {
-  // Modal menyimpan daftar (list) yang aktif saat dibuka + index-nya,
-  // supaya navigasi prev/next konsisten dengan hasil filter saat itu.
   const [modalState, setModalState] = useState(null);
+
   const [filter, setFilter] = useState('Semua');
+
   const [entered, setEntered] = useState(false);
+
   const [favorites, setFavorites] = useState(() => new Set());
+
   const reduced = usePrefersReducedMotion();
 
+  /* ==========================================================
+     FAVORITE
+  ========================================================== */
+
   const toggleFavorite = useCallback((title) => {
-    setFavorites((prev) => {
-      const next = new Set(prev);
-      if (next.has(title)) next.delete(title);
-      else next.add(title);
+    setFavorites((previous) => {
+      const next = new Set(previous);
+
+      if (next.has(title)) {
+        next.delete(title);
+      } else {
+        next.add(title);
+      }
+
       return next;
     });
   }, []);
 
+  /* ==========================================================
+     FILTER
+  ========================================================== */
+
   const frequencies = useMemo(
-    () => ['Semua', ...Array.from(new Set(PROGRAMS.map((p) => p.frequency)))],
+    () => ['Semua', ...Array.from(new Set(PROGRAMS.map((program) => program.frequency)))],
     []
   );
+
   const chips = useMemo(
     () => (favorites.size > 0 ? [...frequencies, 'Favorit'] : frequencies),
     [frequencies, favorites.size]
   );
 
   const counts = useMemo(() => {
-    const map = { Semua: PROGRAMS.length, Favorit: favorites.size };
-    PROGRAMS.forEach((p) => {
-      map[p.frequency] = (map[p.frequency] || 0) + 1;
+    const map = {
+      Semua: PROGRAMS.length,
+      Favorit: favorites.size,
+    };
+
+    PROGRAMS.forEach((program) => {
+      map[program.frequency] = (map[program.frequency] || 0) + 1;
     });
+
     return map;
   }, [favorites.size]);
 
   const filtered = useMemo(() => {
-    if (filter === 'Favorit') return PROGRAMS.filter((p) => favorites.has(p.title));
-    return filter === 'Semua' ? PROGRAMS : PROGRAMS.filter((p) => p.frequency === filter);
+    if (filter === 'Favorit') {
+      return PROGRAMS.filter((program) => favorites.has(program.title));
+    }
+
+    if (filter === 'Semua') {
+      return PROGRAMS;
+    }
+
+    return PROGRAMS.filter((program) => program.frequency === filter);
   }, [filter, favorites]);
 
-  // Jika filter "Favorit" aktif tapi daftar favorit dikosongkan, kembali ke "Semua".
+  /* ==========================================================
+     RESET FAVORITE FILTER
+  ========================================================== */
+
   useEffect(() => {
-    if (filter === 'Favorit' && favorites.size === 0) setFilter('Semua');
+    if (filter === 'Favorit' && favorites.size === 0) {
+      setFilter('Semua');
+    }
   }, [filter, favorites.size]);
 
-  // Re-trigger staggered entrance setiap kali hasil filter berubah.
+  /* ==========================================================
+     ENTER ANIMATION
+  ========================================================== */
+
   useEffect(() => {
     setEntered(false);
-    const raf = requestAnimationFrame(() => setEntered(true));
+
+    if (reduced) {
+      setEntered(true);
+      return;
+    }
+
+    const raf = requestAnimationFrame(() => {
+      setEntered(true);
+    });
+
     return () => cancelAnimationFrame(raf);
-  }, [filter]);
+  }, [filter, reduced]);
+
+  /* ==========================================================
+     MODAL
+  ========================================================== */
 
   function openProgram(program) {
-    const index = filtered.findIndex((p) => p.title === program.title);
-    setModalState({ list: filtered, index });
+    const index = filtered.findIndex((item) => item.title === program.title);
+
+    setModalState({
+      list: filtered,
+      index,
+    });
   }
+
   function closeModal() {
     setModalState(null);
   }
+
   function goNext() {
-    setModalState((s) => (s ? { ...s, index: (s.index + 1) % s.list.length } : s));
+    setModalState((state) => {
+      if (!state || state.list.length === 0) {
+        return state;
+      }
+
+      return {
+        ...state,
+        index: (state.index + 1) % state.list.length,
+      };
+    });
   }
+
   function goPrev() {
-    setModalState((s) => (s ? { ...s, index: (s.index - 1 + s.list.length) % s.list.length } : s));
+    setModalState((state) => {
+      if (!state || state.list.length === 0) {
+        return state;
+      }
+
+      return {
+        ...state,
+        index: (state.index - 1 + state.list.length) % state.list.length,
+      };
+    });
   }
+
+  /* ==========================================================
+     RENDER
+  ========================================================== */
 
   return (
     <section id="program-hse" className="w-full bg-[#FAF8F3]">
-      <style>{`
-        @keyframes hse-shimmer {
-          0% { background-position: 200% 0; }
-          100% { background-position: -200% 0; }
-        }
-        @keyframes hse-fade-in {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-      `}</style>
+      <style>
+        {`
+          @keyframes hse-shimmer {
+            0% {
+              background-position: 200% 0;
+            }
 
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
-        {/* Header */}
-        <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
+            100% {
+              background-position: -200% 0;
+            }
+          }
+
+          @keyframes hse-fade-in {
+            from {
+              opacity: 0;
+            }
+
+            to {
+              opacity: 1;
+            }
+          }
+
+          @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+              animation-duration: 0.01ms !important;
+              animation-iteration-count: 1 !important;
+              scroll-behavior: auto !important;
+              transition-duration: 0.01ms !important;
+            }
+          }
+        `}
+      </style>
+
+      <div
+        className="
+          mx-auto max-w-7xl
+          px-4 sm:px-6 lg:px-8
+          py-16 sm:py-24
+        "
+      >
+        {/* =====================================================
+            HEADER
+        ===================================================== */}
+
+        <div
+          className="
+            flex flex-col
+            lg:flex-row
+            lg:items-end
+            lg:justify-between
+            gap-6
+          "
+        >
           <div className="max-w-2xl">
             <span
-              className="inline-flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-[0.14em] px-3 py-1 rounded-sm"
-              style={{ backgroundColor: 'rgba(107,20,20,0.08)', color: '#6B1414' }}
+              className="
+                inline-flex items-center gap-1.5
+                text-[11px] font-medium
+                uppercase tracking-[0.14em]
+                px-3 py-1 rounded-sm
+              "
+              style={{
+                backgroundColor: 'rgba(107,20,20,0.08)',
+                color: '#6B1414',
+              }}
             >
-              {createElement(CalendarClock, { size: 13, strokeWidth: 2 })}
+              {createElement(CalendarClock, {
+                size: 13,
+                strokeWidth: 2,
+              })}
               Program &amp; Kegiatan HSE
             </span>
 
             <h2
-              className="mt-5 text-2xl sm:text-3xl font-semibold leading-snug"
-              style={{ color: '#2B2320' }}
+              className="
+                mt-5 text-2xl sm:text-3xl
+                font-semibold leading-snug
+              "
+              style={{
+                color: '#2B2320',
+              }}
             >
               Komitmen yang dijalankan lewat program berkelanjutan
             </h2>
-            <p className="mt-3 text-sm sm:text-[15px] leading-relaxed" style={{ color: '#7A6F63' }}>
+
+            <p
+              className="
+                mt-3 text-sm sm:text-[15px]
+                leading-relaxed
+              "
+              style={{
+                color: '#7A6F63',
+              }}
+            >
               Kebijakan HSE diwujudkan melalui rangkaian program dan kegiatan rutin bersama
               karyawan, tenant, dan pengunjung. Klik salah satu program untuk melihat detailnya,
               atau tandai dengan bintang untuk menyimpannya sebagai favorit.
             </p>
           </div>
 
-          {/* Filter chips — tiap chip menampilkan jumlah program */}
+          {/* =================================================
+              FILTER
+          ================================================= */}
+
           <div className="flex flex-wrap gap-2">
-            {chips.map((f) => {
-              const isActive = f === filter;
+            {chips.map((item) => {
+              const isActive = item === filter;
+
               return (
                 <button
-                  key={f}
-                  onClick={() => setFilter(f)}
-                  className="inline-flex items-center gap-1.5 text-xs font-medium px-4 py-2 rounded-full transition-colors"
+                  type="button"
+                  key={item}
+                  onClick={() => setFilter(item)}
+                  className="
+                    inline-flex
+                    items-center gap-1.5
+                    text-xs font-medium
+                    px-4 py-2
+                    rounded-full
+                    transition-colors
+                  "
                   style={{
                     backgroundColor: isActive ? '#6B1414' : 'white',
+
                     color: isActive ? '#FAF8F3' : '#7A6F63',
+
                     border: `1px solid ${isActive ? '#6B1414' : '#EAE0D5'}`,
                   }}
                 >
-                  {f === 'Favorit' &&
+                  {item === 'Favorit' &&
                     createElement(Star, {
                       size: 11,
                       strokeWidth: 2,
-                      style: { color: isActive ? '#F3D9AE' : '#B5791F' },
+                      style: {
+                        color: isActive ? '#F3D9AE' : '#B5791F',
+                      },
                     })}
-                  {f}
+
+                  {item}
+
                   <span
-                    className="text-[10px] font-semibold rounded-full px-1.5 py-0.5"
+                    className="
+                      text-[10px]
+                      font-semibold
+                      rounded-full
+                      px-1.5 py-0.5
+                    "
                     style={{
                       backgroundColor: isActive ? 'rgba(250,248,243,0.18)' : '#F5F0E8',
+
                       color: isActive ? '#F3D9AE' : '#B5A997',
                     }}
                   >
-                    {counts[f] || 0}
+                    {counts[item] || 0}
                   </span>
                 </button>
               );
@@ -659,30 +1380,92 @@ export default function ProgramSection() {
           </div>
         </div>
 
+        {/* =====================================================
+            TICKER
+        ===================================================== */}
+
         <ProgramTicker programs={PROGRAMS} reduced={reduced} />
 
-        {/* Bento grid */}
-        <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filtered.map((program, index) => (
-            <ProgramCard
-              key={program.title}
-              program={program}
-              index={index}
-              entered={entered}
-              isFeatured={program.featured && filter === 'Semua'}
-              isFavorite={favorites.has(program.title)}
-              onToggleFavorite={toggleFavorite}
-              onSelect={() => openProgram(program)}
-            />
-          ))}
-        </div>
+        {/* =====================================================
+            PROGRAM GRID
+        ===================================================== */}
+
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={filter}
+            initial={
+              reduced
+                ? false
+                : {
+                    opacity: 0,
+                  }
+            }
+            animate={{
+              opacity: 1,
+            }}
+            exit={
+              reduced
+                ? undefined
+                : {
+                    opacity: 0,
+                  }
+            }
+            transition={{
+              duration: 0.25,
+            }}
+            className="
+              mt-8
+              grid
+              grid-cols-1
+              sm:grid-cols-2
+              lg:grid-cols-3
+              gap-6
+            "
+          >
+            {filtered.map((program, index) => (
+              <ProgramCard
+                key={program.title}
+                program={program}
+                index={index}
+                entered={entered}
+                reduced={reduced}
+                isFeatured={program.featured && filter === 'Semua'}
+                isFavorite={favorites.has(program.title)}
+                onToggleFavorite={toggleFavorite}
+                onSelect={() => openProgram(program)}
+              />
+            ))}
+          </motion.div>
+        </AnimatePresence>
+
+        {/* EMPTY */}
 
         {filtered.length === 0 && (
-          <p className="mt-12 text-center text-sm" style={{ color: '#B5A997' }}>
+          <motion.p
+            initial={{
+              opacity: 0,
+              y: 10,
+            }}
+            animate={{
+              opacity: 1,
+              y: 0,
+            }}
+            className="
+              mt-12
+              text-center text-sm
+            "
+            style={{
+              color: '#B5A997',
+            }}
+          >
             Belum ada program pada kategori ini.
-          </p>
+          </motion.p>
         )}
       </div>
+
+      {/* =======================================================
+          MODAL
+      ======================================================= */}
 
       {modalState && (
         <ProgramModal

@@ -25,6 +25,9 @@ func main() {
 		&models.CameraOccupancy{},
 		&models.RecordingDuration{},
 		&models.ServicePerformance{},
+		&models.GSLOfficerModel{},
+		&models.ComplaintCategory{},
+		&models.ComplaintRecord{},
 	)
 	if err != nil {
 		log.Fatalf("Failed to auto migrate database: %v", err)

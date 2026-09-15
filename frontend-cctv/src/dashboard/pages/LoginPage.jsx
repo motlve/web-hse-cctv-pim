@@ -164,7 +164,7 @@ export default function LoginPage() {
 
       localStorage.setItem('hasLoginBefore', 'true');
 
-      navigate('/id-cctv');
+      navigate('/dashboard');
     } catch (error) {
       setIsLoading(false);
 
@@ -692,8 +692,8 @@ function ResetPasswordModal({
   const currentStepIndex = steps.findIndex((s) => s.key === step);
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-40 p-4">
-      <div className="bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full relative animate-fade-in">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-40 p-2 sm:p-4 md:p-6">
+      <div className="bg-white rounded-3xl shadow-2xl p-4 sm:p-6 md:p-8 max-w-md w-full max-h-[95vh] overflow-y-auto relative animate-fade-in">
         {/* HEADER */}
         <div className="flex items-center justify-between mb-2">
           <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">

@@ -26,6 +26,7 @@ export default function CostumeDatePicker({ selectedDate, onChange, placeholder 
       allowInput: false,
       clickOpens: true,
       closeOnSelect: true,
+      static: true,
 
       onChange: (dates) => {
         onChangeRef.current?.(dates[0] || null);

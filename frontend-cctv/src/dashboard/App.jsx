@@ -2,6 +2,8 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 
 import LoginPage from './pages/LoginPage';
 
+import MainDashboard from './pages/Dashboard'; // BARU
+
 import IncidentRecord from './pages/IncidentRecord';
 import DataLocation from './pages/DataLocation';
 import Category from './pages/Category';
@@ -23,6 +25,10 @@ import DurationRecord from './pages/DurationRecord';
 
 import ServicePerformance from './pages/ServicePerformance';
 
+import ComplaintGSL from './pages/ComplaintRecord';
+import ComplaintCategoryManagement from './pages/CategoryComplaint';
+import GSLOfficerManagement from './pages/GSLOfficers';
+
 function DashboardApp() {
   return (
     <Routes>
@@ -31,6 +37,9 @@ function DashboardApp() {
 
       {/* LOGIN */}
       <Route path="/login" element={<LoginPage />} />
+
+      {/* DASHBOARD UTAMA */}
+      <Route path="/dashboard" element={<MainDashboard />} />
 
       {/* CCTV MASTER */}
       <Route path="/id-cctv" element={<CCTVId />} />
@@ -63,6 +72,11 @@ function DashboardApp() {
 
       {/* ERROR PAGE */}
       <Route path="*" element={<Navigate to="/login" replace />} />
+
+      {/* KOMPLAIN GSL */}
+      <Route path="/komplain-gsl" element={<ComplaintGSL />} />
+      <Route path="/kategori-komplain" element={<ComplaintCategoryManagement />} />
+      <Route path="/petugas-gsl" element={<GSLOfficerManagement />} />
     </Routes>
   );
 }

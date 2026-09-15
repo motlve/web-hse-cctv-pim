@@ -931,7 +931,7 @@ export default function SummaryRequestCam() {
     hover:-translate-y-2
     hover:shadow-[0_40px_90px_rgba(245,158,11,.18)]
     duration-500
-    p-10
+    p-4 sm:p-6 md:p-10
     "
             >
               <div className="absolute -left-20 bottom-0 w-72 h-72 bg-yellow-300/20 blur-[120px]" />
@@ -942,7 +942,9 @@ export default function SummaryRequestCam() {
                     ANALITIK PEMASANGAN
                   </p>
 
-                  <h2 className="text-4xl font-semibold mt-2">Progres Pemasangan</h2>
+                  <h2 className="text-2xl sm:text-3xl md:text-4xl font-semibold mt-2">
+                    Progres Pemasangan
+                  </h2>
 
                   <p className="text-gray-500 mt-3">
                     Analisis durasi pemasangan CCTV berdasarkan Progress Days.
@@ -976,7 +978,7 @@ export default function SummaryRequestCam() {
               </div>
 
               {/* Chart */}
-              <div className="mt-8 bg-white rounded-[32px] border shadow-inner p-8">
+              <div className="mt-8 bg-white rounded-[32px] border shadow-inner p-4 sm:p-6 md:p-8">
                 <div className="h-[350px]">
                   <Bar data={progressChart} options={lineChartOptions} />
                 </div>
@@ -1344,7 +1346,7 @@ export default function SummaryRequestCam() {
         ============================================================ */}
         {showRequestStatus && (
           <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-200"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-2 sm:p-4 md:p-6 animate-in fade-in duration-200"
             onClick={() => setShowRequestStatus(false)}
           >
             <div
@@ -1523,7 +1525,7 @@ export default function SummaryRequestCam() {
         ============================================================ */}
         {showLocationAnalysis && (
           <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-200"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-2 sm:p-4 md:p-6 animate-in fade-in duration-200"
             onClick={() => setShowLocationAnalysis(false)}
           >
             <div
@@ -1718,7 +1720,7 @@ export default function SummaryRequestCam() {
         ============================================================ */}
         {showProgressAnalysis && (
           <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-200"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-2 sm:p-4 md:p-6 animate-in fade-in duration-200"
             onClick={() => setShowProgressAnalysis(false)}
           >
             <div
@@ -1887,7 +1889,7 @@ export default function SummaryRequestCam() {
         ============================================================ */}
         {showInputDatabaseAnalysis && (
           <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-200"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-2 sm:p-4 md:p-6 animate-in fade-in duration-200"
             onClick={() => setShowInputDatabaseAnalysis(false)}
           >
             <div
@@ -2062,7 +2064,7 @@ export default function SummaryRequestCam() {
         ============================================================ */}
         {showDashboardSummary && (
           <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-200"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-2 sm:p-4 md:p-6 animate-in fade-in duration-200"
             onClick={() => setShowDashboardSummary(false)}
           >
             <div

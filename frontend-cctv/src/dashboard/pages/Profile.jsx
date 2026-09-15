@@ -249,9 +249,9 @@ max-w-5xl
 w-full
 bg-white/80
 backdrop-blur-3xl
-rounded-[40px]
+rounded-2xl md:rounded-[40px]
 shadow-[0_40px_100px_rgba(0,0,0,.15)]
-p-10
+p-4 sm:p-6 md:p-10
 "
       >
         {/* HEADER */}
@@ -416,6 +416,7 @@ flex
 items-center
 justify-center
 z-50
+p-2 sm:p-4 md:p-6
 "
         >
           <motion.div
@@ -429,16 +430,18 @@ z-50
             }}
             className="
 bg-white
-rounded-[35px]
-p-8
+rounded-2xl md:rounded-[35px]
+p-4 sm:p-6 md:p-8
 w-full
 max-w-md
+max-h-[95vh]
+overflow-y-auto
 shadow-2xl
 "
           >
             <h2
               className="
-text-3xl
+text-2xl md:text-3xl
 font-bold
 mb-6
 "
@@ -501,6 +504,8 @@ focus:ring-blue-500
             <div
               className="
 flex
+flex-col-reverse
+sm:flex-row
 justify-end
 gap-3
 mt-8
@@ -509,6 +514,8 @@ mt-8
               <button
                 onClick={() => setShowEdit(false)}
                 className="
+w-full
+sm:w-auto
 px-6
 py-3
 rounded-full
@@ -522,6 +529,8 @@ bg-gray-200
                 disabled={saving}
                 onClick={updateProfile}
                 className="
+w-full
+sm:w-auto
 px-6
 py-3
 rounded-full

@@ -312,7 +312,7 @@ export default function UserManagement() {
 
     emailRegistered: userList.filter((u) => u.email).length,
 
-    roleDistribution: ['Admin', 'Manager HSE', 'Petugas CCTV', 'Petugas HSE', 'Guest'].map(
+    roleDistribution: ['Admin', 'Manager HSE', 'Petugas CCTV', 'Petugas HSE', 'Petugas GSL', 'Guest'].map(
       (role) => ({
         role,
         total: userList.filter((u) => u.role === role).length,
@@ -345,7 +345,7 @@ export default function UserManagement() {
       {
         label: 'Jumlah User',
         data: userAnalytics.roleDistribution.map((item) => item.total),
-        backgroundColor: ['#ef4444', '#f59e0b', '#3b82f6', '#22c55e', '#6b7280'],
+        backgroundColor: ['#ef4444', '#f59e0b', '#3b82f6', '#22c55e', '#a855f7', '#6b7280'],
         borderRadius: 10,
         borderSkipped: false,
         barThickness: 35,
@@ -762,6 +762,7 @@ export default function UserManagement() {
                     <option>Manager HSE</option>
                     <option>Petugas CCTV</option>
                     <option>Petugas HSE</option>
+                    <option>Petugas GSL</option>
                     <option>Guest</option>
                   </select>
                 </div>
@@ -876,6 +877,7 @@ export default function UserManagement() {
                           'Manager HSE': 'bg-yellow-100 text-yellow-700 border-yellow-200',
                           'Petugas CCTV': 'bg-blue-100 text-blue-700 border-blue-200',
                           'Petugas HSE': 'bg-green-100 text-green-700 border-green-200',
+                          'Petugas GSL': 'bg-purple-100 text-purple-700 border-purple-200',
                           Guest: 'bg-gray-100 text-gray-700 border-gray-300',
                         };
 
@@ -884,6 +886,7 @@ export default function UserManagement() {
                           'Manager HSE': '🦺',
                           'Petugas CCTV': '📹',
                           'Petugas HSE': '🛡️',
+                          'Petugas GSL': '🧰',
                           Guest: '👤',
                         };
 

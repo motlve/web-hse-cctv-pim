@@ -84,6 +84,10 @@ router.Handle(
 	RegisterRecordingDurationRoutes(router)
 	RegisterServicePerformanceRoutes(router)
 	RegisterAuthRoutes(router)
+	RegisterGSLOfficerRoutes(router)
+	RegisterComplaintCategoryRoutes(router)
+	RegisterComplaintRoutes(router)
+	RegisterDashboardMainRoutes(router)
 
 
 	// ==========================
